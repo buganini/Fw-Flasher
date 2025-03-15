@@ -9,6 +9,9 @@ from threading import Thread
 import json
 from collections import OrderedDict
 from PUI.PySide6 import *
+import PUI
+
+VERSION = "0.1"
 
 def serial_ports():
     result = []
@@ -79,7 +82,8 @@ class UI(Application):
         log.set_logger(CustomLogger())
 
     def content(self):
-        with Window(title="Firmware Flasher", size=(800, 600)):
+        title = f"Firmware Flasher v{VERSION} (esptool {esptool.__version__}, PUI {PUI.__version__} {PUI_BACKEND})"
+        with Window(title=title, size=(800, 600)):
             with VBox():
                 with HBox():
                     Label("Port")
