@@ -43,13 +43,20 @@ class UI(Application):
         self.state.progress = 0
         self.state.root = ""
         self.state.logs = []
+        self.state.mac = ""
         self.state.worker = None
 
         class CustomLogger(TemplateLogger):
             def print(self, message, *args, **kwargs):
                 print(f"{message}", *args, **kwargs)
+                ui_changed = False
                 if not message.startswith("Writing at"):
                     state.logs.append(message)
+                    ui_changed = True
+                if message.startswith("MAC: "):
+                    state.mac = message.split("MAC: ")[1].strip()
+                    ui_changed = True
+                if ui_changed:
                     ui.wait()
 
             def note(self, message):
@@ -102,6 +109,10 @@ class UI(Application):
                         Label(desc)
 
                     Spacer()
+
+                with HBox():
+                    Label("MAC:")
+                    TextField(self.state("mac"))
 
                 ProgressBar(progress=self.state.progress, maximum=100)
 
