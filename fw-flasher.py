@@ -35,6 +35,7 @@ def serial_ports():
 class UI(Application):
     def __init__(self):
         super().__init__()
+        ui = self
         self.state = state = State()
         self.state.port = "Auto"
         self.state.profile = ""
@@ -47,8 +48,9 @@ class UI(Application):
         class CustomLogger(TemplateLogger):
             def print(self, message, *args, **kwargs):
                 print(f"{message}", *args, **kwargs)
-                # if not message.startswith("Writing at"):
-                #     state.logs.append(message)
+                state.logs.append(message)
+                while ui.updating or ui.dirty:
+                    time.sleep(0.1)
 
             def note(self, message):
                 self.print(f"NOTE: {message}")
@@ -65,6 +67,8 @@ class UI(Application):
 
             def set_progress(self, percentage):
                 state.progress = percentage
+                while ui.updating or ui.dirty:
+                    time.sleep(0.1)
 
         log.set_logger(CustomLogger())
 
@@ -99,7 +103,7 @@ class UI(Application):
 
                     Spacer()
 
-                # ProgressBar(progress=self.state.progress, maximum=100)
+                ProgressBar(progress=self.state.progress, maximum=100)
 
                 with Scroll().layout(height=800).scrollY(Scroll.END):
                     Text("\n".join(self.state.logs))
