@@ -199,10 +199,14 @@ class UI(Application):
 
 ui = UI()
 
+manifest_json = "manifest.json"
+if getattr(sys, 'frozen', False):
+    manifest_json = os.path.join(sys._MEIPASS, manifest_json)
+
 if len(sys.argv) > 1:
     ui.loadFile(sys.argv[1])
-elif os.path.exists("manifest.json"):
-    ui.loadFile("manifest.json")
+elif os.path.exists(manifest_json):
+    ui.loadFile(manifest_json)
 
 ui.run()
 

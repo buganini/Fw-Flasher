@@ -22,6 +22,9 @@ if platform.system()=="Darwin":
 # else:
 #     pyinstaller_args.extend(["-i", 'resources/icon.ico'])
 
+if os.path.exists("manifest.json"):
+    pyinstaller_args.extend(["--add-data", "manifest.json:."])
+
 print(pyinstaller_args)
 
 PyInstaller.__main__.run([
