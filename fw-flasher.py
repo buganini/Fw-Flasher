@@ -89,7 +89,8 @@ class UI(Application):
                     else:
                         Button("Load").click(lambda e: self.load())
 
-                    Button("Flash").click(lambda e: self.flash())
+                    if self.state.worker is None:
+                        Button("Flash").click(lambda e: self.flash())
 
                     Spacer()
 
@@ -130,11 +131,20 @@ class UI(Application):
             port = serial_ports()[0]
 
         if profile.get("type", "").startswith("esp"):
-            self.worker = Thread(target=self.flash_esp, args=[port, profile])
-            self.worker.daemon = True
-            self.worker.start()
+
+            Thread(target=self.thread_watcher, args=[self.flash_esp, port, profile], daemon=True).start()
         else:
             print("Unsupported chip type: %s" % profile.get("type"))
+
+    def thread_watcher(self, func, port, profile):
+        worker = Thread(target=func, args=[port, profile], daemon=True)
+        self.state.worker = worker
+        worker.start()
+        worker.join()
+        if self.ok:
+            print("Done")
+            self.state.logs.append("Done")
+        self.state.worker = None
 
     def flash_esp(self, port, profile):
         cmd = []
@@ -159,15 +169,18 @@ class UI(Application):
                 return
             cmd.extend([offset, file])
         cmd = [str(x) for x in cmd]
+        print(cmd)
         self.state.logs.append("esptool.py " + " ".join(cmd))
+        self.ok = True
         try:
             esptool.main(cmd)
+            print("esptool.main() done")
         except Exception as e:
+            self.ok = False
             import traceback
             self.state.logs.append(f"Error: {e}")
             self.state.logs.append(f"Error: {traceback.format_exc()}")
             traceback.print_exc()
-        self.worker = None
 
 ui = UI()
 
