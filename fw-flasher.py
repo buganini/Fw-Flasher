@@ -45,13 +45,10 @@ class UI(Application):
         self.worker = None
 
         class CustomLogger(TemplateLogger):
-            def __init__(self):
-                super().__init__()
-                self.state = state
-
             def print(self, message, *args, **kwargs):
                 print(f"{message}", *args, **kwargs)
-                state.logs.append(message)
+                # if not message.startswith("Writing at"):
+                #     state.logs.append(message)
 
             def note(self, message):
                 self.print(f"NOTE: {message}")
@@ -91,6 +88,8 @@ class UI(Application):
 
                     Button("Flash").click(lambda e: self.flash())
 
+                    Spacer()
+
                 with HBox():
                     Label("Description:")
 
@@ -100,7 +99,7 @@ class UI(Application):
 
                     Spacer()
 
-                ProgressBar(progress=self.state.progress, maximum=100)
+                # ProgressBar(progress=self.state.progress, maximum=100)
 
                 with Scroll().layout(height=800).scrollY(Scroll.END):
                     Text("\n".join(self.state.logs))
@@ -152,14 +151,19 @@ class UI(Application):
                 pass
             else:
                 file = os.path.join(self.state.root, file)
+            if not os.path.exists(file):
+                self.state.logs.append(f"Error: File not found: {file}")
+                return
             cmd.extend([offset, file])
         cmd = [str(x) for x in cmd]
-        print(" ".join(cmd))
+        self.state.logs.append("esptool.py " + " ".join(cmd))
         try:
             esptool.main(cmd)
         except Exception as e:
+            import traceback
             self.state.logs.append(f"Error: {e}")
-            print(e)
+            self.state.logs.append(f"Error: {traceback.format_exc()}")
+            traceback.print_exc()
         self.worker = None
 
 ui = UI()
