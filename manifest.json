@@ -1,6 +1,6 @@
 {
-    "Config A": {
-        "description": "Config A",
+    "Smart Switch A": {
+        "description": "Smart Switch (Type A)",
         "type": "esp32c3",
         "baudrate": 460800,
         "before": "default_reset",
@@ -10,10 +10,27 @@
         "flash_size": "4MB",
         "flash_freq": "80m",
         "write_flash": [
-            ["0x0", "config_a/bootloader.bin"],
-            ["0x8000", "config_a/partition-table.bin"],
-            ["0x10c000", "config_a/ota_data_initial.bin"],
-            ["0x110000", "config_a/app.bin"]
+            ["0x0", "smart_switch_a/bootloader.bin"],
+            ["0x8000", "smart_switch_a/partition-table.bin"],
+            ["0x10c000", "smart_switch_a/ota_data_initial.bin"],
+            ["0x110000", "smart_switch_a/app.bin"]
+        ]
+    },
+    "Smart Switch B": {
+        "description": "Smart Switch (Type B)",
+        "type": "esp32c3",
+        "baudrate": 460800,
+        "before": "default_reset",
+        "after": "hard_reset",
+        "no-stub": false,
+        "flash_mode": "dio",
+        "flash_size": "4MB",
+        "flash_freq": "80m",
+        "write_flash": [
+            ["0x0", "smart_switch_b/bootloader.bin"],
+            ["0x8000", "smart_switch_b/partition-table.bin"],
+            ["0x10c000", "smart_switch_b/ota_data_initial.bin"],
+            ["0x110000", "smart_switch_b/app.bin"]
         ]
     }
 }
