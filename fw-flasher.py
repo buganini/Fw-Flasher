@@ -43,14 +43,14 @@ class UI(Application):
         self.state.progress = 0
         self.state.root = ""
         self.state.logs = []
-        self.worker = None
+        self.state.worker = None
 
         class CustomLogger(TemplateLogger):
             def print(self, message, *args, **kwargs):
                 print(f"{message}", *args, **kwargs)
-                state.logs.append(message)
-                while ui.updating or ui.dirty:
-                    time.sleep(0.1)
+                if not message.startswith("Writing at"):
+                    state.logs.append(message)
+                    ui.wait()
 
             def note(self, message):
                 self.print(f"NOTE: {message}")
@@ -67,8 +67,7 @@ class UI(Application):
 
             def set_progress(self, percentage):
                 state.progress = percentage
-                while ui.updating or ui.dirty:
-                    time.sleep(0.1)
+                ui.wait()
 
         log.set_logger(CustomLogger())
 
