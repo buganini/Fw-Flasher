@@ -88,7 +88,7 @@ class UI(Application):
                         for port in serial_ports():
                             ComboBoxItem(port)
 
-                    Label("Profiles")
+                    Label("Profile")
                     if self.state.profiles:
                         with ComboBox(text_model=self.state("profile")):
                             for profile in self.state.profiles.keys():
