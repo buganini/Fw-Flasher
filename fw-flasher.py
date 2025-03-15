@@ -152,6 +152,7 @@ class UI(Application):
             print("Unsupported chip type: %s" % profile.get("type"))
 
     def thread_watcher(self, func, port, profile):
+        self.state.logs = []
         worker = Thread(target=func, args=[port, profile], daemon=True)
         self.state.worker = worker
         worker.start()
