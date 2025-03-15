@@ -79,7 +79,7 @@ class UI(Application):
         log.set_logger(CustomLogger())
 
     def content(self):
-        with Window(title="Firmware Flasher"):
+        with Window(title="Firmware Flasher", size=(800, 600)):
             with VBox():
                 with HBox():
                     Label("Port")
@@ -116,7 +116,7 @@ class UI(Application):
 
                 ProgressBar(progress=self.state.progress, maximum=100)
 
-                with Scroll().layout(height=800).scrollY(Scroll.END):
+                with Scroll().layout(weight=1).scrollY(Scroll.END):
                     Text("\n".join(self.state.logs))
 
     def load(self):
