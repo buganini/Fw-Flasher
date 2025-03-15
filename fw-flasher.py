@@ -48,6 +48,7 @@ class UI(Application):
         self.state.logs = []
         self.state.mac = ""
         self.state.worker = None
+        self.state.erase_flash = True
 
         class CustomLogger(TemplateLogger):
             def print(self, message, *args, **kwargs):
@@ -99,6 +100,8 @@ class UI(Application):
                                 ComboBoxItem(profile)
                     else:
                         Button("Load").click(lambda e: self.load())
+
+                    Checkbox("Erase Flash", self.state("erase_flash"))
 
                     if self.state.worker is None:
                         Button("Flash").click(lambda e: self.flash())
@@ -171,7 +174,22 @@ class UI(Application):
             self.state.logs.append("Done")
         self.state.worker = None
 
+    def erase_esp(self, port, profile):
+        cmd = []
+        cmd.extend(["--port", port])
+        cmd.extend(["--chip", profile.get("type")])
+        cmd.extend(["erase-flash"])
+        cmd = [str(x) for x in cmd]
+        esptool.main(cmd)
+
     def flash_esp(self, port, profile):
+        if self.state.erase_flash:
+            print("Erase Flash")
+            eraser = Thread(target=self.erase_esp, args=[port, profile], daemon=True)
+            eraser.start()
+            eraser.join()
+            self.state.logs.append("Erase Flash Done")
+
         cmd = []
         cmd.extend(["--port", port])
         cmd.extend(["--chip", profile.get("type")])
