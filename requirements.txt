@@ -1,0 +1,3 @@
+git+https://github.com/espressif/esptool.git
+PySide6
+QPUIQ

@@ -1,0 +1,19 @@
+{
+    "Config A": {
+        "description": "Config A",
+        "type": "esp32c3",
+        "baudrate": 460800,
+        "before": "default_reset",
+        "after": "hard_reset",
+        "no-stub": true,
+        "flash_mode": "dio",
+        "flash_size": "4MB",
+        "flash_freq": "80m",
+        "write_flash": [
+            ["0x0", "config_a/bootloader.bin"],
+            ["0x8000", "config_a/partition-table.bin"],
+            ["0x10c000", "config_a/ota_data_initial.bin"],
+            ["0x110000", "config_a/app.bin"]
+        ]
+    }
+}
