@@ -6,10 +6,10 @@
         "before": "default_reset",
         "after": "hard_reset",
         "no-stub": false,
-        "flash_mode": "dio",
-        "flash_size": "4MB",
-        "flash_freq": "80m",
-        "write_flash": [
+        "flash-mode": "dio",
+        "flash-size": "4MB",
+        "flash-freq": "80m",
+        "write-flash": [
             ["0x0", "smart_switch_a/bootloader.bin"],
             ["0x8000", "smart_switch_a/partition-table.bin"],
             ["0x10c000", "smart_switch_a/ota_data_initial.bin"],
@@ -23,10 +23,10 @@
         "before": "default_reset",
         "after": "hard_reset",
         "no-stub": false,
-        "flash_mode": "dio",
-        "flash_size": "4MB",
-        "flash_freq": "80m",
-        "write_flash": [
+        "flash-mode": "dio",
+        "flash-size": "4MB",
+        "flash-freq": "80m",
+        "write-flash": [
             ["0x0", "smart_switch_b/bootloader.bin"],
             ["0x8000", "smart_switch_b/partition-table.bin"],
             ["0x10c000", "smart_switch_b/ota_data_initial.bin"],
