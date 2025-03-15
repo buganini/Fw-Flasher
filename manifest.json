@@ -5,7 +5,7 @@
         "baudrate": 460800,
         "before": "default_reset",
         "after": "hard_reset",
-        "no-stub": true,
+        "no-stub": false,
         "flash_mode": "dio",
         "flash_size": "4MB",
         "flash_freq": "80m",

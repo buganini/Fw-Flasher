@@ -143,7 +143,7 @@ class UI(Application):
         cmd.extend(["-b", profile.get("baudrate", "460800")])
         cmd.extend([f"--before={profile.get('before', 'default_reset')}"])
         cmd.extend([f"--after={profile.get('after', 'hard_reset')}"])
-        if profile.get("no-stub", True):
+        if profile.get("no-stub", False):
             cmd.extend(["--no-stub"])
         cmd.extend(["write-flash"])
         cmd.extend(["--flash-mode", profile.get("flash-mode", "dio")])
