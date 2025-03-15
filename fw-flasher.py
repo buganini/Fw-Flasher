@@ -132,8 +132,19 @@ class UI(Application):
         with open(file, "r") as f:
             self.state.profiles = json.load(f, object_pairs_hook=OrderedDict)
             if self.state.profiles:
+                for name, profile in self.state.profiles.items():
+                    flasher = self.get_flasher(profile)
+                    if not flasher:
+                        self.state.logs.append(f"Unsupported chip type \"{profile.get('type')}\" in profile \"{name}\"")
                 self.state.profile = list(self.state.profiles.keys())[0]
                 self.state.root = os.path.dirname(file)
+
+    def get_flasher(self, profile):
+        if profile.get("type", "").startswith("esp"):
+            return self.flash_esp
+        else:
+            print("Unsupported chip type: %s" % profile.get("type"))
+
 
     def flash(self):
         self.state.progress = 0
@@ -145,11 +156,9 @@ class UI(Application):
         if port == "Auto":
             port = serial_ports()[0]
 
-        if profile.get("type", "").startswith("esp"):
-
-            Thread(target=self.thread_watcher, args=[self.flash_esp, port, profile], daemon=True).start()
-        else:
-            print("Unsupported chip type: %s" % profile.get("type"))
+        flasher = self.get_flasher(profile)
+        if flasher:
+            Thread(target=self.thread_watcher, args=[flasher, port, profile], daemon=True).start()
 
     def thread_watcher(self, func, port, profile):
         self.state.logs = []
