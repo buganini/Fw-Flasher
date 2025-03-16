@@ -6,6 +6,7 @@ from serial.tools import list_ports
 from esptool.logger import log, TemplateLogger
 import esptool
 from threading import Thread
+import shutil
 import subprocess
 import time
 import glob
@@ -152,13 +153,22 @@ class UI(Application):
     def loadFile(self, file):
         with open(file, "r") as f:
             self.state.profiles = json.load(f, object_pairs_hook=OrderedDict)
+            use_bmp = False
             if self.state.profiles:
                 for name, profile in self.state.profiles.items():
                     flasher = self.get_flasher(profile)
                     if not flasher:
                         self.state.logs.append(f"Unsupported chip type \"{profile.get('type')}\" in profile \"{name}\"")
+                    elif flasher == self.flash_bmp:
+                        use_bmp = True
                 self.state.profile = list(self.state.profiles.keys())[0]
                 self.state.root = os.path.dirname(file)
+            if use_bmp:
+                gdb = shutil.which("arm-none-eabi-gdb")
+                if gdb:
+                    print(f"Found {gdb}")
+                else:
+                    self.state.logs.append("Error: arm-none-eabi-gdb not found")
 
     def get_flasher(self, profile):
         if profile.get("type", "").startswith("esp"):
