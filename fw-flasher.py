@@ -6,6 +6,9 @@ from serial.tools import list_ports
 from esptool.logger import log, TemplateLogger
 import esptool
 from threading import Thread
+import subprocess
+import time
+import glob
 import json
 from collections import OrderedDict
 from PUI.PySide6 import *
@@ -34,6 +37,17 @@ def serial_ports():
         except (OSError, serial.SerialException):
             pass
     return result
+
+def find_gdb_port():
+    import glob
+    if os.uname().sysname == "Darwin":
+        ports = glob.glob("/dev/cu.usbmodem*")
+        for p in ports:
+            if p[:-1]+"1" in ports and p[:-1]+"3" in ports:
+                return p[:-1]+"1"
+        raise Exception("GDB port not found")
+    else:
+        raise Exception("Unsupported platform")
 
 class UI(Application):
     def __init__(self):
@@ -87,12 +101,6 @@ class UI(Application):
         with Window(title=title, size=(800, 600)):
             with VBox():
                 with HBox():
-                    Label("Port")
-                    with ComboBox(text_model=self.state("port")):
-                        ComboBoxItem("Auto")
-                        for port in serial_ports():
-                            ComboBoxItem(port)
-
                     Label("Profile")
                     if self.state.profiles:
                         with ComboBox(text_model=self.state("profile")):
@@ -101,7 +109,15 @@ class UI(Application):
                     else:
                         Button("Load").click(lambda e: self.load())
 
-                    Checkbox("Erase Flash", self.state("erase_flash"))
+                    if self.state.profile:
+                        Label("Port")
+                        with ComboBox(text_model=self.state("port")):
+                            ComboBoxItem("Auto")
+                            for port in serial_ports():
+                                ComboBoxItem(port)
+
+                    if self.get_flasher(self.state.profiles[self.state.profile]) == self.flash_esp:
+                        Checkbox("Erase Flash", self.state("erase_flash"))
 
                     if self.state.worker is None:
                         Button("Flash").click(lambda e: self.flash())
@@ -117,11 +133,13 @@ class UI(Application):
 
                     Spacer()
 
-                with HBox():
-                    Label("MAC:")
-                    TextField(self.state("mac"))
+                if self.get_flasher(self.state.profiles[self.state.profile]) == self.flash_esp:
+                    with HBox():
+                        Label("MAC:")
+                        TextField(self.state("mac"))
 
-                ProgressBar(progress=self.state.progress, maximum=100)
+                if self.get_flasher(self.state.profiles[self.state.profile]) == self.flash_esp:
+                    ProgressBar(progress=self.state.progress, maximum=100)
 
                 with Scroll().layout(weight=1).scrollY(Scroll.END):
                     Text("\n".join(self.state.logs))
@@ -145,6 +163,8 @@ class UI(Application):
     def get_flasher(self, profile):
         if profile.get("type", "").startswith("esp"):
             return self.flash_esp
+        elif profile.get("type", "") == "bmp":
+            return self.flash_bmp
         else:
             print("Unsupported chip type: %s" % profile.get("type"))
 
@@ -156,8 +176,6 @@ class UI(Application):
             return
 
         port = self.state.port
-        if port == "Auto":
-            port = serial_ports()[0]
 
         flasher = self.get_flasher(profile)
         if flasher:
@@ -183,6 +201,9 @@ class UI(Application):
         esptool.main(cmd)
 
     def flash_esp(self, port, profile):
+        if port == "Auto":
+            port = serial_ports()[0]
+
         if self.state.erase_flash:
             print("Erase Flash")
             eraser = Thread(target=self.erase_esp, args=[port, profile], daemon=True)
@@ -224,6 +245,56 @@ class UI(Application):
             self.state.logs.append(f"Error: {e}")
             self.state.logs.append(f"Error: {traceback.format_exc()}")
             traceback.print_exc()
+
+    def flash_bmp(self, port, profile):
+        if port == "Auto":
+            port = find_gdb_port()
+
+        self.ok = True
+
+        if profile.get("tpwr", True):
+            self.state.logs.append(f"TPWR power cycle")
+            cmd = [
+                "arm-none-eabi-gdb",
+                "-ex", f"target extended-remote {port}",
+                "-ex", "monitor tpwr disable",
+                "-ex", "monitor tpwr enable",
+                "-ex", "quit",
+            ]
+            print(" ".join(cmd))
+            self.state.logs.append(" ".join(cmd))
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=0)
+            while True:
+                line = proc.stdout.readline()
+                if not line:
+                    break
+                line = line.decode("utf-8", errors="ignore")
+                line = line.strip()
+                print(line)
+                self.state.logs.append(line)
+            time.sleep(0.5)
+
+        cmd = [
+            "arm-none-eabi-gdb",
+            "-ex", f"target extended-remote {port}",
+            "-ex", "monitor tpwr enable",
+            "-ex", "monitor swd_scan",
+            "-ex", f"attach {profile.get('attach', '1')}",
+            "-ex", f"load \"{profile.get('load', '')}\"",
+            "-ex", "set confirm off",
+            "-ex", "quit",
+        ]
+        print(" ".join(cmd))
+        self.state.logs.append(" ".join(cmd))
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=0)
+        while True:
+            line = proc.stdout.readline()
+            if not line:
+                break
+            line = line.decode("utf-8", errors="ignore")
+            line = line.strip()
+            print(line)
+            self.state.logs.append(line)
 
 ui = UI()
 

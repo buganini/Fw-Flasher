@@ -1,6 +1,6 @@
 {
-    "Smart Switch A": {
-        "description": "Smart Switch (Type A)",
+    "ESP Controller": {
+        "description": "ESP controller",
         "type": "esp32c3",
         "baudrate": 460800,
         "before": "default_reset",
@@ -16,21 +16,11 @@
             ["0x110000", "smart_switch_a/app.bin"]
         ]
     },
-    "Smart Switch B": {
-        "description": "Smart Switch (Type B)",
-        "type": "esp32c3",
-        "baudrate": 460800,
-        "before": "default_reset",
-        "after": "hard_reset",
-        "no-stub": false,
-        "flash-mode": "dio",
-        "flash-size": "4MB",
-        "flash-freq": "80m",
-        "write-flash": [
-            ["0x0", "smart_switch_b/bootloader.bin"],
-            ["0x8000", "smart_switch_b/partition-table.bin"],
-            ["0x10c000", "smart_switch_b/ota_data_initial.bin"],
-            ["0x110000", "smart_switch_b/app.bin"]
-        ]
+    "NRF52 Controller": {
+        "description": "NRF52 Controller",
+        "type": "bmp",
+        "attach": 1,
+        "tpwr": true,
+        "load": "nrf52_controller/merged.hex"
     }
 }
