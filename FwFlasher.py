@@ -15,7 +15,7 @@ from collections import OrderedDict
 from PUI.PySide6 import *
 import PUI
 
-VERSION = "0.1"
+VERSION = "0.2"
 
 def serial_ports():
     result = []
