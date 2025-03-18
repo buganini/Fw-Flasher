@@ -197,9 +197,6 @@ class UI(Application):
                     print(f"Found {arm_none_eabi_gdb}")
                 else:
                     self.state.logs.append("Error: arm-none-eabi-gdb not found")
-                    self.state.logs.append(f"Error: MEIPASS {sys._MEIPASS}")
-                    if not getattr(sys, 'frozen', False):
-                        self.state.logs.append("Please download it from https://developer.arm.com/downloads/-/gnu-rm and extract it to the root of the fw-flasher so that arm-none-eabi-gdb is in the gcc-arm-none-eabi-X.Y-Z/bin directory")
 
     def get_flasher(self, profile):
         if profile.get("type", "").startswith("esp"):

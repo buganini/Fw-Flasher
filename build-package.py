@@ -35,7 +35,6 @@ if arm_none_eabi_gdb:
     pyinstaller_args.extend(["--add-binary", arm_none_eabi_gdb + ":bin"])
 else:
     print("arm-none-eabi-gdb not found")
-    print("Please download it from https://developer.arm.com/downloads/-/gnu-rm and extract it to the root of the FwFlasher so that arm-none-eabi-gdb is in the gcc-arm-none-eabi-X.Y-Z/bin directory")
     sys.exit(1)
 
 print(pyinstaller_args)
