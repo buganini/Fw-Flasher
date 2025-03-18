@@ -1,7 +1,8 @@
 # FW Flash
 ## Features
 * Config with [JSON file](https://github.com/buganini/Fw-Flasher/blob/main/manifest.json)
-## Supoorted Backends
+
+## Supported Backends
 * esptool
 * Black Magic Probe
 
