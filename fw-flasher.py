@@ -50,9 +50,17 @@ def find_gdb_port():
     else:
         raise Exception("Unsupported platform")
 
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath("resources")
+
+    return os.path.join(base_path, relative_path)
+
 class UI(Application):
     def __init__(self):
-        super().__init__()
+        super().__init__(icon=resource_path("icon.ico"))
         ui = self
         self.state = state = State()
         self.state.port = "Auto"
@@ -99,7 +107,7 @@ class UI(Application):
 
     def content(self):
         title = f"Firmware Flasher v{VERSION} (esptool {esptool.__version__}, PUI {PUI.__version__} {PUI_BACKEND})"
-        with Window(title=title, size=(800, 600)):
+        with Window(title=title, size=(800, 600), icon=resource_path("icon.ico")):
             with VBox():
                 with HBox():
                     Label("Profile")

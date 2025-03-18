@@ -13,7 +13,7 @@ codesign_identity = None
 pyinstaller_args = []
 create_dmg_args = []
 if platform.system()=="Darwin":
-    # pyinstaller_args.extend(["-i", 'resources/icon.icns'])
+    pyinstaller_args.extend(["-i", 'resources/icon.icns'])
     subprocess.run(["security", "find-identity", "-v", "-p", "codesigning"])
     codesign_identity = input("Enter the codesign identity \"Developer ID Application: XXXXXX (XXXXXXXXXX)\" (leave empty for no signing): ").strip()
     if codesign_identity:
@@ -36,8 +36,8 @@ PyInstaller.__main__.run([
     "--onedir",
     "--noconfirm",
     "--windowed",
-    # "--icon=resources/icon.ico",
-    # "--add-data=resources/icon.ico:.",
+    "--icon=resources/icon.ico",
+    "--add-data=resources/icon.ico:.",
     *pyinstaller_args
 ])
 
@@ -65,7 +65,7 @@ if create_dmg:
     subprocess.run([
         "create-dmg",
         "--volname", "fw-flasher",
-        # "--volicon", "resources/icon.icns",
+        "--volicon", "resources/icon.icns",
         "--app-drop-link", "0", "0",
         *create_dmg_args,
         "fw-flasher.dmg", "dist/fw-flasher.app"
