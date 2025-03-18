@@ -1,3 +1,4 @@
 git+https://github.com/espressif/esptool.git
 git+https://github.com/buganini/PUI.git
 PySide6
+pyinstaller
