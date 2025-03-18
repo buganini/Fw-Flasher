@@ -7,7 +7,8 @@ from esptool.logger import log, TemplateLogger
 import esptool
 from threading import Thread
 import shutil
-import subprocess
+import re
+import pexpect
 import time
 import glob
 import json
@@ -16,6 +17,11 @@ from PUI.PySide6 import *
 import PUI
 
 VERSION = "0.4"
+
+def strip(s):
+    s = re.sub(r'\x1b\[[0-9;]*m', '', s)
+    s = re.sub(r'\x1b\[[0-9;]*[a-zA-Z]', '', s)
+    return s
 
 def serial_ports():
     result = []
@@ -321,6 +327,7 @@ class UI(Application):
             self.state.logs.append(f"TPWR power cycle")
             cmd = [
                 arm_none_eabi_gdb,
+                "-ex", "set pagination off",
                 "-ex", f"target extended-remote {port}",
                 "-ex", "monitor tpwr disable",
                 "-ex", "monitor tpwr enable",
@@ -328,38 +335,42 @@ class UI(Application):
             ]
             print(" ".join(cmd))
             self.state.logs.append(" ".join(cmd))
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=0)
+            child = pexpect.spawn(cmd[0], cmd[1:], timeout=300)
             while True:
-                line = proc.stdout.readline()
-                if not line:
+                try:
+                    child.expect(['\n'])
+                    line = child.before
+                    line = line.decode("utf-8", errors="ignore")
+                    line = strip(line)
+                    self.state.logs.append(line)
+                except pexpect.EOF:
                     break
-                line = line.decode("utf-8", errors="ignore")
-                line = line.strip()
-                print(line)
-                self.state.logs.append(line)
             time.sleep(0.5)
 
         cmd = [
             arm_none_eabi_gdb,
+            "-ex", "set pagination off",
             "-ex", f"target extended-remote {port}",
             "-ex", "monitor tpwr enable",
             "-ex", "monitor swd_scan",
+            "-ex", "set confirm off",
             "-ex", f"attach {profile.get('attach', '1')}",
             "-ex", f"load \"{file}\"",
-            "-ex", "set confirm off",
             "-ex", "quit",
         ]
         print(" ".join(cmd))
         self.state.logs.append(" ".join(cmd))
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=0)
+        child = pexpect.spawn(cmd[0], cmd[1:], timeout=300)
+        child.logfile_read = sys.stdout.buffer
         while True:
-            line = proc.stdout.readline()
-            if not line:
+            try:
+                child.expect('\n')
+                line = child.before
+                line = line.decode("utf-8", errors="ignore")
+                line = strip(line)
+                self.state.logs.append(line)
+            except pexpect.EOF:
                 break
-            line = line.decode("utf-8", errors="ignore")
-            line = line.strip()
-            print(line)
-            self.state.logs.append(line)
 
 
 if __name__ == "__main__":
