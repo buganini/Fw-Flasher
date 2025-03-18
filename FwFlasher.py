@@ -58,6 +58,26 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
+def find_arm_none_eabi_gdb():
+    try:
+        base_path = sys._MEIPASS
+        bin_path = os.path.join(base_path, "bin")
+        arm_none_eabi_gdb = glob.glob(os.path.join(bin_path, "arm-none-eabi-gdb*"))
+        if arm_none_eabi_gdb:
+            arm_none_eabi_gdb = arm_none_eabi_gdb[0]
+        else:
+            arm_none_eabi_gdb = None
+    except Exception:
+        base_path = os.path.dirname(sys.argv[0])
+        arm_none_eabi_gdb = glob.glob(os.path.join(base_path, "gcc-arm-none-eabi-*/bin/arm-none-eabi-gdb"))
+        if arm_none_eabi_gdb:
+            arm_none_eabi_gdb = arm_none_eabi_gdb[0]
+        else:
+            arm_none_eabi_gdb = None
+    return arm_none_eabi_gdb
+
+arm_none_eabi_gdb = find_arm_none_eabi_gdb()
+
 class UI(Application):
     def __init__(self):
         super().__init__(icon=resource_path("icon.ico"))
@@ -125,7 +145,7 @@ class UI(Application):
                             for port in serial_ports():
                                 ComboBoxItem(port)
 
-                    if self.get_flasher(self.state.profiles[self.state.profile]) == self.flash_esp:
+                    if self.state.profile and self.get_flasher(self.state.profiles[self.state.profile]) == self.flash_esp:
                         Checkbox("Erase Flash", self.state("erase_flash"))
 
                     if self.state.worker is None:
@@ -142,12 +162,12 @@ class UI(Application):
 
                     Spacer()
 
-                if self.get_flasher(self.state.profiles[self.state.profile]) == self.flash_esp:
+                if self.state.profile and self.get_flasher(self.state.profiles[self.state.profile]) == self.flash_esp:
                     with HBox():
                         Label("MAC:")
                         TextField(self.state("mac"))
 
-                if self.get_flasher(self.state.profiles[self.state.profile]) == self.flash_esp:
+                if self.state.profile and self.get_flasher(self.state.profiles[self.state.profile]) == self.flash_esp:
                     ProgressBar(progress=self.state.progress, maximum=100)
 
                 with Scroll().layout(weight=1).scrollY(Scroll.END):
@@ -159,6 +179,7 @@ class UI(Application):
             self.loadFile(file)
 
     def loadFile(self, file):
+        self.state.logs = []
         with open(file, "r") as f:
             self.state.profiles = json.load(f, object_pairs_hook=OrderedDict)
             use_bmp = False
@@ -172,11 +193,13 @@ class UI(Application):
                 self.state.profile = list(self.state.profiles.keys())[0]
                 self.state.root = os.path.dirname(file)
             if use_bmp:
-                gdb = shutil.which("arm-none-eabi-gdb")
-                if gdb:
-                    print(f"Found {gdb}")
+                if arm_none_eabi_gdb:
+                    print(f"Found {arm_none_eabi_gdb}")
                 else:
                     self.state.logs.append("Error: arm-none-eabi-gdb not found")
+                    self.state.logs.append(f"Error: MEIPASS {sys._MEIPASS}")
+                    if not getattr(sys, 'frozen', False):
+                        self.state.logs.append("Please download it from https://developer.arm.com/downloads/-/gnu-rm and extract it to the root of the fw-flasher so that arm-none-eabi-gdb is in the gcc-arm-none-eabi-X.Y-Z/bin directory")
 
     def get_flasher(self, profile):
         if profile.get("type", "").startswith("esp"):
@@ -200,7 +223,6 @@ class UI(Application):
             Thread(target=self.thread_watcher, args=[flasher, port, profile], daemon=True).start()
 
     def thread_watcher(self, func, port, profile):
-        self.state.logs = []
         worker = Thread(target=func, args=[port, profile], daemon=True)
         self.state.worker = worker
         worker.start()
@@ -219,6 +241,8 @@ class UI(Application):
         esptool.main(cmd)
 
     def flash_esp(self, port, profile):
+        self.state.logs = []
+
         if port == "Auto":
             port = serial_ports()[0]
 
@@ -247,6 +271,7 @@ class UI(Application):
             else:
                 file = os.path.join(self.state.root, file)
             if not os.path.exists(file):
+                # self.state.logs.append(f"Error: File not found: {file}, root={self.state.root}")
                 self.state.logs.append(f"Error: File not found: {file}")
                 return
             cmd.extend([offset, file])
@@ -258,13 +283,18 @@ class UI(Application):
             esptool.main(cmd)
             print("esptool.main() done")
         except Exception as e:
-            self.ok = False
             import traceback
+            self.ok = False
             self.state.logs.append(f"Error: {e}")
             self.state.logs.append(f"Error: {traceback.format_exc()}")
             traceback.print_exc()
 
     def flash_bmp(self, port, profile):
+        if not arm_none_eabi_gdb:
+            return
+
+        self.state.logs = []
+
         if port == "Auto":
             port = find_gdb_port()
 
@@ -273,7 +303,7 @@ class UI(Application):
         if profile.get("tpwr", True):
             self.state.logs.append(f"TPWR power cycle")
             cmd = [
-                "arm-none-eabi-gdb",
+                arm_none_eabi_gdb,
                 "-ex", f"target extended-remote {port}",
                 "-ex", "monitor tpwr disable",
                 "-ex", "monitor tpwr enable",
@@ -293,7 +323,7 @@ class UI(Application):
             time.sleep(0.5)
 
         cmd = [
-            "arm-none-eabi-gdb",
+            arm_none_eabi_gdb,
             "-ex", f"target extended-remote {port}",
             "-ex", "monitor tpwr enable",
             "-ex", "monitor swd_scan",
@@ -314,16 +344,18 @@ class UI(Application):
             print(line)
             self.state.logs.append(line)
 
-ui = UI()
 
-manifest_json = "manifest.json"
-if getattr(sys, 'frozen', False):
-    manifest_json = os.path.join(sys._MEIPASS, manifest_json)
+if __name__ == "__main__":
+    ui = UI()
 
-if len(sys.argv) > 1:
-    ui.loadFile(sys.argv[1])
-elif os.path.exists(manifest_json):
-    ui.loadFile(manifest_json)
+    manifest_json = "manifest.json"
+    if getattr(sys, 'frozen', False):
+        manifest_json = os.path.join(sys._MEIPASS, manifest_json)
 
-ui.run()
+    if len(sys.argv) > 1:
+        ui.loadFile(sys.argv[1])
+    elif os.path.exists(manifest_json):
+        ui.loadFile(manifest_json)
+
+    ui.run()
 
