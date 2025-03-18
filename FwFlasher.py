@@ -220,6 +220,8 @@ class UI(Application):
             Thread(target=self.thread_watcher, args=[flasher, port, profile], daemon=True).start()
 
     def thread_watcher(self, func, port, profile):
+        self.ok = False
+
         worker = Thread(target=func, args=[port, profile], daemon=True)
         self.state.worker = worker
         worker.start()
@@ -242,6 +244,10 @@ class UI(Application):
 
         if port == "Auto":
             port = serial_ports()[0]
+
+        if not port:
+            self.state.logs.append("Error: Port not found")
+            return
 
         if self.state.erase_flash:
             print("Erase Flash")
@@ -268,7 +274,6 @@ class UI(Application):
             else:
                 file = os.path.join(self.state.root, file)
             if not os.path.exists(file):
-                # self.state.logs.append(f"Error: File not found: {file}, root={self.state.root}")
                 self.state.logs.append(f"Error: File not found: {file}")
                 return
             cmd.extend([offset, file])
@@ -292,8 +297,21 @@ class UI(Application):
 
         self.state.logs = []
 
+        file = profile.get('load', '')
+        if file.startswith("/"):
+            pass
+        else:
+            file = os.path.join(self.state.root, file)
+        if not os.path.exists(file):
+            self.state.logs.append(f"Error: File not found: {file}")
+            return
+
         if port == "Auto":
             port = find_gdb_port()
+
+        if not port:
+            self.state.logs.append("Error: BMP port not found")
+            return
 
         self.ok = True
 
@@ -325,7 +343,7 @@ class UI(Application):
             "-ex", "monitor tpwr enable",
             "-ex", "monitor swd_scan",
             "-ex", f"attach {profile.get('attach', '1')}",
-            "-ex", f"load \"{profile.get('load', '')}\"",
+            "-ex", f"load \"{file}\"",
             "-ex", "set confirm off",
             "-ex", "quit",
         ]
