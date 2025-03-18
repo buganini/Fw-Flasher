@@ -1,4 +1,4 @@
-git+https://github.com/espressif/esptool.git
-git+https://github.com/buganini/PUI.git
+git+https://github.com/espressif/esptool.git # for unreleased esptool.logger.TemplateLogger
+git+https://github.com/buganini/PUI.git # for unreleased PUIView.wait()
 PySide6
 pyinstaller

@@ -62,14 +62,14 @@ def find_arm_none_eabi_gdb():
     try:
         base_path = sys._MEIPASS
         bin_path = os.path.join(base_path, "bin")
-        arm_none_eabi_gdb = glob.glob(os.path.join(bin_path, "arm-none-eabi-gdb*"))
+        arm_none_eabi_gdb = sorted(glob.glob(os.path.join(bin_path, "arm-none-eabi-gdb*")))
         if arm_none_eabi_gdb:
             arm_none_eabi_gdb = arm_none_eabi_gdb[0]
         else:
             arm_none_eabi_gdb = None
     except Exception:
         base_path = os.path.dirname(sys.argv[0])
-        arm_none_eabi_gdb = glob.glob(os.path.join(base_path, "gcc-arm-none-eabi-*/bin/arm-none-eabi-gdb*"))
+        arm_none_eabi_gdb = sorted(glob.glob(os.path.join(base_path, "gcc-arm-none-eabi-*/bin/arm-none-eabi-gdb*")))
         if arm_none_eabi_gdb:
             arm_none_eabi_gdb = arm_none_eabi_gdb[0]
         else:
