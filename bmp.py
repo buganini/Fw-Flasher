@@ -3,7 +3,7 @@ import os
 import time
 import sys
 import pexpect
-
+import shutil
 from common import *
 
 def find_arm_none_eabi_gdb():
@@ -24,7 +24,7 @@ def find_arm_none_eabi_gdb():
             arm_none_eabi_gdb = arm_none_eabi_gdb[0]
         else:
             arm_none_eabi_gdb = None
-    return arm_none_eabi_gdb
+    return shutil.which("arm-none-eabi-gdb")
 
 arm_none_eabi_gdb = find_arm_none_eabi_gdb()
 

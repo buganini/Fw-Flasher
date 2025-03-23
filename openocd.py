@@ -1,13 +1,21 @@
 import os
 import pexpect
+import shutil
 
 from common import *
 
-openocd = "openocd"
+openocd = shutil.which("openocd")
 
 class OpenOCDBackend(Backend):
     list_ports = None
     erase_flash = None
+
+    @staticmethod
+    def precheck(main):
+        if openocd:
+            print(f"Found {openocd}")
+        else:
+            main.state.logs.append("Error: OpenOCD not found")
 
     @staticmethod
     def flash(main, port, profile):
