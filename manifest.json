@@ -27,6 +27,7 @@
         "description": "NRF52 Controller with OpenOCD",
         "type": "openocd",
         "interface": "cmsis-dap.cfg",
+        "transport": "swd",
         "target": "nrf52.cfg",
         "program": "nrf52_controller/merged.hex"
     }

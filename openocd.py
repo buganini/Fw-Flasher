@@ -75,12 +75,18 @@ class OpenOCDBackend(Backend):
         if not main.ok:
             return
 
+        transport = profile.get('transport')
+
         cmd = [
             openocd[0],
             "-f", interface,
+        ]
+        if transport:
+            cmd.extend(["-c", f"transport select {profile.get('transport', 'jtag')}"])
+        cmd.extend([
             "-f", target,
             "-c", f"program \"{file}\" verify reset exit",
-        ]
+        ])
         print(" ".join(cmd))
         main.state.logs.append(" ".join(cmd))
         child = pexpect.spawn(cmd[0], cmd[1:], timeout=300)
