@@ -36,23 +36,20 @@ class UI(Application):
                 with HBox():
                     Label("Profile")
                     if self.state.profiles:
-                        with ComboBox(text_model=self.state("profile")):
+                        with ComboBox(text_model=self.state("profile")).change(self.changeProfile):
                             for profile in self.state.profiles.keys():
                                 ComboBoxItem(profile)
                     else:
                         Button("Load").click(lambda e: self.load())
 
-                    backend = self.getBackend(self.state.profiles[self.state.profile])
-                    if backend and backend.list_ports:
-                        backend.precheck(self)
-
+                    if self.backend and self.backend.list_ports:
                         Label("Port")
                         with ComboBox(text_model=self.state("port")):
                             ComboBoxItem("Auto")
-                            for port in backend.list_ports(self):
+                            for port in self.backend.list_ports(self):
                                 ComboBoxItem(port)
 
-                    if backend and backend.erase_flash:
+                    if self.backend and self.backend.erase_flash:
                         Checkbox("Erase Flash", self.state("erase_flash"))
 
                     if self.state.worker is None:
@@ -69,16 +66,22 @@ class UI(Application):
 
                     Spacer()
 
-                if backend and backend.show_mac:
+                if self.backend and self.backend.show_mac:
                     with HBox():
                         Label("MAC:")
                         TextField(self.state("mac"))
 
-                if backend and backend.show_progress:
+                if self.backend and self.backend.show_progress:
                     ProgressBar(progress=self.state.progress, maximum=100)
 
                 with Scroll().layout(weight=1).scrollY(Scroll.END):
                     Text("\n".join(self.state.logs))
+
+    def changeProfile(self, e):
+        backend = self.getBackend(self.state.profiles[self.state.profile])
+        if backend and backend != self.backend:
+            backend.precheck(self)
+            self.backend = backend
 
     def load(self):
         file = OpenFile()
@@ -97,12 +100,13 @@ class UI(Application):
                         self.state.logs.append(f"Unsupported chip type \"{profile.get('type')}\" in profile \"{name}\"")
                 self.state.profile = list(self.state.profiles.keys())[0]
                 self.state.root = os.path.dirname(file)
+                self.changeProfile(None)
 
     def getBackend(self, profile):
         if profile.get("type", "").startswith("esp"):
-            return ESPBackend(self)
+            return ESPBackend
         elif profile.get("type", "") == "bmp":
-            return BMPBackend(self)
+            return BMPBackend
         else:
             print("Unsupported chip type: %s" % profile.get("type"))
             return None

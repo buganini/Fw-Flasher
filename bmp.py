@@ -30,7 +30,9 @@ arm_none_eabi_gdb = find_arm_none_eabi_gdb()
 
 class BMPBackend(Backend):
     erase_flash = None
-    def list_ports(self, main):
+
+    @staticmethod
+    def list_ports(main):
         import glob
         if os.uname().sysname == "Darwin":
             ports = glob.glob("/dev/cu.usbmodem*")
@@ -42,13 +44,15 @@ class BMPBackend(Backend):
             main.state.logs.append("Error: Unsupported platform")
             return []
 
-    def precheck(self, main):
+    @staticmethod
+    def precheck(main):
         if arm_none_eabi_gdb:
             print(f"Found {arm_none_eabi_gdb}")
         else:
             main.state.logs.append("Error: arm-none-eabi-gdb not found")
 
-    def flash(self, main, port, profile):
+    @staticmethod
+    def flash(main, port, profile):
         if not arm_none_eabi_gdb:
             return
 
@@ -64,7 +68,7 @@ class BMPBackend(Backend):
             return
 
         if port == "Auto":
-            ports = self.list_ports(main)
+            ports = BMPBackend.list_ports(main)
             if ports:
                 port = ports[0]
             else:

@@ -21,10 +21,8 @@ class Backend():
     show_mac = False
     show_progress = False
 
-    def __init__(self, main):
-        self.main = main
-
-    def list_ports(self, main):
+    @staticmethod
+    def list_ports(main):
         result = []
 
         if sys.platform.startswith('win'):
@@ -46,12 +44,15 @@ class Backend():
                 pass
         return result
 
-    def precheck(self, main):
+    @staticmethod
+    def precheck(main):
         pass
 
-    def flash(self, main, port, profile):
+    @staticmethod
+    def flash(main, port, profile):
         pass
 
-    def erase_flash(self, main, port, profile):
+    @staticmethod
+    def erase_flash(main, port, profile):
         pass
 

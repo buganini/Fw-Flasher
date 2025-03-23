@@ -9,7 +9,8 @@ class ESPBackend(Backend):
     show_mac = True
     show_progress = True
 
-    def flash(self, main, port, profile):
+    @staticmethod
+    def flash(main, port, profile):
         from esptool.logger import log, TemplateLogger
 
         if hasattr(log, "set_logger"):
@@ -48,14 +49,14 @@ class ESPBackend(Backend):
         main.state.logs = []
 
         if port == "Auto":
-            port = self.list_ports()[0]
+            port = ESPBackend.list_ports(main)[0]
 
         if not port:
             main.state.logs.append("Error: Port not found")
             return
 
         if main.state.erase_flash:
-            self.erase_flash(main, port, profile)
+            ESPBackend.erase_flash(main, port, profile)
 
         cmd = []
         cmd.extend(["--port", port])
@@ -92,14 +93,16 @@ class ESPBackend(Backend):
             main.state.logs.append(f"Error: {traceback.format_exc()}")
             traceback.print_exc()
 
-    def erase_flash(self, main, port, profile):
+    @staticmethod
+    def erase_flash(main, port, profile):
         print("Erase Flash")
-        eraser = Thread(target=self._erase_flash, args=[port, profile], daemon=True)
+        eraser = Thread(target=ESPBackend._erase_flash, args=[port, profile], daemon=True)
         eraser.start()
         eraser.join()
         main.state.logs.append("Erase Flash Done")
 
-    def _erase_flash(self, port, profile):
+    @staticmethod
+    def _erase_flash(port, profile):
         cmd = []
         cmd.extend(["--port", port])
         cmd.extend(["--chip", profile.get("type")])
