@@ -71,7 +71,7 @@ class ESPBackend(Backend):
         cmd.extend(["--flash-freq", profile.get("flash-freq", "80m")])
         cmd.extend(["--flash-size", profile.get("flash-size", "4MB")])
         for offset, file in profile.get("write-flash", []):
-            if file.startswith("/"):
+            if os.path.isabs(file):
                 pass
             else:
                 file = os.path.join(main.state.root, file)

@@ -13,17 +13,13 @@ def find_arm_none_eabi_gdb():
         arm_none_eabi_gdb = glob.glob(os.path.join(bin_path, "arm-none-eabi-gdb*"))
         arm_none_eabi_gdb = [f for f in arm_none_eabi_gdb if "gdb-" not in f]
         if arm_none_eabi_gdb:
-            arm_none_eabi_gdb = arm_none_eabi_gdb[0]
-        else:
-            arm_none_eabi_gdb = None
+            return arm_none_eabi_gdb[0]
     except Exception:
         base_path = os.path.dirname(sys.argv[0])
         arm_none_eabi_gdb = glob.glob(os.path.join(base_path, "gcc-arm-none-eabi-*/bin/arm-none-eabi-gdb*"))
         arm_none_eabi_gdb = [f for f in arm_none_eabi_gdb if "gdb-" not in f]
         if arm_none_eabi_gdb:
-            arm_none_eabi_gdb = arm_none_eabi_gdb[0]
-        else:
-            arm_none_eabi_gdb = None
+            return arm_none_eabi_gdb[0]
     return shutil.which("arm-none-eabi-gdb")
 
 arm_none_eabi_gdb = find_arm_none_eabi_gdb()
@@ -59,7 +55,7 @@ class BMPBackend(Backend):
         main.state.logs = []
 
         file = profile.get('load', '')
-        if file.startswith("/"):
+        if os.path.isabs(file):
             pass
         else:
             file = os.path.join(main.state.root, file)

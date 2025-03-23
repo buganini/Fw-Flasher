@@ -44,7 +44,7 @@ class OpenOCDBackend(Backend):
         main.state.logs = []
 
         file = profile.get('program', '')
-        if file.startswith("/"):
+        if os.path.isabs(file):
             pass
         else:
             file = os.path.join(main.state.root, file)
