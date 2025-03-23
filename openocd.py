@@ -4,7 +4,26 @@ import shutil
 
 from common import *
 
-openocd = shutil.which("openocd")
+def find_openocd():
+    try:
+        base_path = sys._MEIPASS
+        bin_path = os.path.join(base_path, "bin")
+        openocd = glob.glob(os.path.join(bin_path, "openocd*"))
+        if openocd:
+            return openocd[0], os.path.abspath(os.path.join(os.path.dirname(openocd[0]), "..", "openocd"))
+    except Exception:
+        base_path = os.path.dirname(sys.argv[0])
+        openocd = glob.glob(os.path.join(base_path, "*openocd-*/bin/openocd*"))
+        if openocd:
+            return openocd[0], os.path.abspath(os.path.join(os.path.dirname(openocd[0]), "..", "openocd"))
+
+    openocd = shutil.which("openocd")
+    if openocd:
+        return openocd, os.path.abspath(os.path.join(os.path.dirname(openocd), "..", "share", "openocd"))
+
+    return None
+
+openocd = find_openocd()
 
 class OpenOCDBackend(Backend):
     list_ports = None
@@ -33,14 +52,33 @@ class OpenOCDBackend(Backend):
             main.state.logs.append(f"Error: File not found: {file}")
             return
 
-        main.ok = False
 
         file = file.replace("\\", "/").replace("\"", "\\\"")
 
+        interface = profile.get("interface", "")
+        if not os.path.isabs(interface):
+            interface = os.path.join(openocd[1], "scripts", "interface", interface)
+
+        main.ok = True
+        target = profile.get("target", "")
+        if not os.path.isabs(target):
+            target = os.path.join(openocd[1], "scripts", "target", target)
+
+        if not os.path.exists(interface):
+            main.state.logs.append(f"Error: Interface file not found: {interface}")
+            main.ok = False
+
+        if not os.path.exists(target):
+            main.state.logs.append(f"Error: Target file not found: {target}")
+            main.ok = False
+
+        if not main.ok:
+            return
+
         cmd = [
-            openocd,
-            "-f", profile.get("interface", ""),
-            "-f", profile.get("target", ""),
+            openocd[0],
+            "-f", interface,
+            "-f", target,
             "-c", f"program \"{file}\" verify reset exit",
         ]
         print(" ".join(cmd))

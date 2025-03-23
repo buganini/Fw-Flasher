@@ -26,8 +26,8 @@
     "NRF52 Controller (OpenOCD)": {
         "description": "NRF52 Controller with OpenOCD",
         "type": "openocd",
-        "interface": "/opt/homebrew/share/openocd/scripts/interface/cmsis-dap.cfg",
-        "target": "/opt/homebrew/share/openocd/scripts/target/nrf52.cfg",
+        "interface": "cmsis-dap.cfg",
+        "target": "nrf52.cfg",
         "program": "nrf52_controller/merged.hex"
     }
 }
