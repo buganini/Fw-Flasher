@@ -22,5 +22,12 @@
         "attach": 1,
         "tpwr": true,
         "load": "nrf52_controller/merged.hex"
+    },
+    "NRF52 Controller (OpenOCD)": {
+        "description": "NRF52 Controller with OpenOCD",
+        "type": "openocd",
+        "interface": "/opt/homebrew/share/openocd/scripts/interface/cmsis-dap.cfg",
+        "target": "/opt/homebrew/share/openocd/scripts/target/nrf52.cfg",
+        "program": "nrf52_controller/merged.hex"
     }
 }

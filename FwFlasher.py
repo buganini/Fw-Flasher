@@ -12,6 +12,7 @@ VERSION = "0.4"
 from common import *
 from esp import ESPBackend
 from bmp import BMPBackend
+from openocd import OpenOCDBackend
 
 
 class UI(Application):
@@ -107,6 +108,8 @@ class UI(Application):
             return ESPBackend
         elif profile.get("type", "") == "bmp":
             return BMPBackend
+        elif profile.get("type", "") == "openocd":
+            return OpenOCDBackend
         else:
             print("Unsupported chip type: %s" % profile.get("type"))
             return None
