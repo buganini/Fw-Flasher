@@ -1,16 +1,7 @@
 import os
 import sys
-import glob
-import serial
-from serial.tools import list_ports
-from esptool.logger import log, TemplateLogger
-import esptool
 from threading import Thread
-import shutil
-import re
-import pexpect
-import time
-import glob
+import esptool
 import json
 from collections import OrderedDict
 from PUI.PySide6 import *
@@ -18,78 +9,14 @@ import PUI
 
 VERSION = "0.4"
 
-def strip(s):
-    s = re.sub(r'\x1b\[[0-9;]*m', '', s)
-    s = re.sub(r'\x1b\[[0-9;]*[a-zA-Z]', '', s)
-    return s
+from common import *
+from esp import ESPBackend
+from bmp import BMPBackend
 
-def serial_ports():
-    result = []
-
-    if sys.platform.startswith('win'):
-        ports = ['COM%s' % (i + 1) for i in range(256)]
-    elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
-        # this excludes your current terminal "/dev/tty"
-        ports = glob.glob('/dev/tty[A-Za-z]*')
-    elif sys.platform.startswith('darwin'):
-        ports = [p for p in glob.glob('/dev/tty.*') if all([b not in p for b in ["Bluetooth", "debug"]])]
-    else:
-        raise EnvironmentError('Unsupported platform')
-
-    for port in ports:
-        try:
-            s = serial.Serial(port)
-            s.close()
-            result.append(port)
-        except (OSError, serial.SerialException):
-            pass
-    return result
-
-def find_gdb_port():
-    import glob
-    if os.uname().sysname == "Darwin":
-        ports = glob.glob("/dev/cu.usbmodem*")
-        for p in ports:
-            if p[:-1]+"1" in ports and p[:-1]+"3" in ports:
-                return p[:-1]+"1"
-        raise Exception("GDB port not found")
-    else:
-        raise Exception("Unsupported platform")
-
-def resource_path(relative_path):
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath("resources")
-
-    return os.path.join(base_path, relative_path)
-
-def find_arm_none_eabi_gdb():
-    try:
-        base_path = sys._MEIPASS
-        bin_path = os.path.join(base_path, "bin")
-        arm_none_eabi_gdb = glob.glob(os.path.join(bin_path, "arm-none-eabi-gdb*"))
-        arm_none_eabi_gdb = [f for f in arm_none_eabi_gdb if "gdb-" not in f]
-        if arm_none_eabi_gdb:
-            arm_none_eabi_gdb = arm_none_eabi_gdb[0]
-        else:
-            arm_none_eabi_gdb = None
-    except Exception:
-        base_path = os.path.dirname(sys.argv[0])
-        arm_none_eabi_gdb = glob.glob(os.path.join(base_path, "gcc-arm-none-eabi-*/bin/arm-none-eabi-gdb*"))
-        arm_none_eabi_gdb = [f for f in arm_none_eabi_gdb if "gdb-" not in f]
-        if arm_none_eabi_gdb:
-            arm_none_eabi_gdb = arm_none_eabi_gdb[0]
-        else:
-            arm_none_eabi_gdb = None
-    return arm_none_eabi_gdb
-
-arm_none_eabi_gdb = find_arm_none_eabi_gdb()
 
 class UI(Application):
     def __init__(self):
         super().__init__(icon=resource_path("icon.ico"))
-        ui = self
         self.state = state = State()
         self.state.port = "Auto"
         self.state.profile = ""
@@ -100,38 +27,7 @@ class UI(Application):
         self.state.mac = ""
         self.state.worker = None
         self.state.erase_flash = True
-
-        class CustomLogger(TemplateLogger):
-            def print(self, message, *args, **kwargs):
-                print(f"{message}", *args, **kwargs)
-                ui_changed = False
-                if not message.startswith("Writing at"):
-                    state.logs.append(message)
-                    ui_changed = True
-                if message.startswith("MAC: "):
-                    state.mac = message.split("MAC: ")[1].strip()
-                    ui_changed = True
-                if ui_changed:
-                    ui.wait()
-
-            def note(self, message):
-                self.print(f"NOTE: {message}")
-
-            def warning(self, message):
-                self.print(f"WARNING: {message}")
-
-            def error(self, message):
-                self.print(message, file=sys.stderr)
-
-            def print_overwrite(self, message, last_line=False):
-                # Overwriting not needed, print normally
-                self.print(message)
-
-            def set_progress(self, percentage):
-                state.progress = percentage
-                ui.wait()
-
-        log.set_logger(CustomLogger())
+        self.backend = None
 
     def content(self):
         title = f"Firmware Flasher v{VERSION} (esptool {esptool.__version__}, PUI {PUI.__version__} {PUI_BACKEND})"
@@ -146,14 +42,17 @@ class UI(Application):
                     else:
                         Button("Load").click(lambda e: self.load())
 
-                    if self.state.profile:
+                    backend = self.getBackend(self.state.profiles[self.state.profile])
+                    if backend and backend.list_ports:
+                        backend.precheck(self)
+
                         Label("Port")
                         with ComboBox(text_model=self.state("port")):
                             ComboBoxItem("Auto")
-                            for port in serial_ports():
+                            for port in backend.list_ports(self):
                                 ComboBoxItem(port)
 
-                    if self.state.profile and self.get_flasher(self.state.profiles[self.state.profile]) == self.flash_esp:
+                    if backend and backend.erase_flash:
                         Checkbox("Erase Flash", self.state("erase_flash"))
 
                     if self.state.worker is None:
@@ -170,12 +69,12 @@ class UI(Application):
 
                     Spacer()
 
-                if self.state.profile and self.get_flasher(self.state.profiles[self.state.profile]) == self.flash_esp:
+                if backend and backend.show_mac:
                     with HBox():
                         Label("MAC:")
                         TextField(self.state("mac"))
 
-                if self.state.profile and self.get_flasher(self.state.profiles[self.state.profile]) == self.flash_esp:
+                if backend and backend.show_progress:
                     ProgressBar(progress=self.state.progress, maximum=100)
 
                 with Scroll().layout(weight=1).scrollY(Scroll.END):
@@ -193,26 +92,20 @@ class UI(Application):
             use_bmp = False
             if self.state.profiles:
                 for name, profile in self.state.profiles.items():
-                    flasher = self.get_flasher(profile)
-                    if not flasher:
+                    backend = self.getBackend(profile)
+                    if not backend:
                         self.state.logs.append(f"Unsupported chip type \"{profile.get('type')}\" in profile \"{name}\"")
-                    elif flasher == self.flash_bmp:
-                        use_bmp = True
                 self.state.profile = list(self.state.profiles.keys())[0]
                 self.state.root = os.path.dirname(file)
-            if use_bmp:
-                if arm_none_eabi_gdb:
-                    print(f"Found {arm_none_eabi_gdb}")
-                else:
-                    self.state.logs.append("Error: arm-none-eabi-gdb not found")
 
-    def get_flasher(self, profile):
+    def getBackend(self, profile):
         if profile.get("type", "").startswith("esp"):
-            return self.flash_esp
+            return ESPBackend(self)
         elif profile.get("type", "") == "bmp":
-            return self.flash_bmp
+            return BMPBackend(self)
         else:
             print("Unsupported chip type: %s" % profile.get("type"))
+            return None
 
 
     def flash(self):
@@ -223,154 +116,24 @@ class UI(Application):
 
         port = self.state.port
 
-        flasher = self.get_flasher(profile)
-        if flasher:
-            Thread(target=self.thread_watcher, args=[flasher, port, profile], daemon=True).start()
+        backend = self.getBackend(profile)
+        if backend:
+            Thread(target=self.thread_watcher, args=[backend.flash, port, profile], daemon=True).start()
 
     def thread_watcher(self, func, port, profile):
         self.ok = False
 
-        worker = Thread(target=func, args=[port, profile], daemon=True)
+        worker = Thread(target=func, args=[self, port, profile], daemon=True)
         self.state.worker = worker
         worker.start()
         worker.join()
         if self.ok:
             print("Done")
             self.state.logs.append("Done")
+        else:
+            self.state.logs.append("Error")
         self.state.worker = None
 
-    def erase_esp(self, port, profile):
-        cmd = []
-        cmd.extend(["--port", port])
-        cmd.extend(["--chip", profile.get("type")])
-        cmd.extend(["erase-flash"])
-        cmd = [str(x) for x in cmd]
-        esptool.main(cmd)
-
-    def flash_esp(self, port, profile):
-        self.state.logs = []
-
-        if port == "Auto":
-            port = serial_ports()[0]
-
-        if not port:
-            self.state.logs.append("Error: Port not found")
-            return
-
-        if self.state.erase_flash:
-            print("Erase Flash")
-            eraser = Thread(target=self.erase_esp, args=[port, profile], daemon=True)
-            eraser.start()
-            eraser.join()
-            self.state.logs.append("Erase Flash Done")
-
-        cmd = []
-        cmd.extend(["--port", port])
-        cmd.extend(["--chip", profile.get("type")])
-        cmd.extend(["-b", profile.get("baudrate", "460800")])
-        cmd.extend([f"--before={profile.get('before', 'default_reset')}"])
-        cmd.extend([f"--after={profile.get('after', 'hard_reset')}"])
-        if profile.get("no-stub", False):
-            cmd.extend(["--no-stub"])
-        cmd.extend(["write-flash"])
-        cmd.extend(["--flash-mode", profile.get("flash-mode", "dio")])
-        cmd.extend(["--flash-freq", profile.get("flash-freq", "80m")])
-        cmd.extend(["--flash-size", profile.get("flash-size", "4MB")])
-        for offset, file in profile.get("write-flash", []):
-            if file.startswith("/"):
-                pass
-            else:
-                file = os.path.join(self.state.root, file)
-            if not os.path.exists(file):
-                self.state.logs.append(f"Error: File not found: {file}")
-                return
-            cmd.extend([offset, file])
-        cmd = [str(x) for x in cmd]
-        print(cmd)
-        self.state.logs.append("esptool.py " + " ".join(cmd))
-        self.ok = True
-        try:
-            esptool.main(cmd)
-            print("esptool.main() done")
-        except Exception as e:
-            import traceback
-            self.ok = False
-            self.state.logs.append(f"Error: {e}")
-            self.state.logs.append(f"Error: {traceback.format_exc()}")
-            traceback.print_exc()
-
-    def flash_bmp(self, port, profile):
-        if not arm_none_eabi_gdb:
-            return
-
-        self.state.logs = []
-
-        file = profile.get('load', '')
-        if file.startswith("/"):
-            pass
-        else:
-            file = os.path.join(self.state.root, file)
-        if not os.path.exists(file):
-            self.state.logs.append(f"Error: File not found: {file}")
-            return
-
-        if port == "Auto":
-            port = find_gdb_port()
-
-        if not port:
-            self.state.logs.append("Error: BMP port not found")
-            return
-
-        self.ok = True
-
-        if profile.get("tpwr", True):
-            self.state.logs.append(f"TPWR power cycle")
-            cmd = [
-                arm_none_eabi_gdb,
-                "-ex", "set pagination off",
-                "-ex", f"target extended-remote {port}",
-                "-ex", "monitor tpwr disable",
-                "-ex", "monitor tpwr enable",
-                "-ex", "quit",
-            ]
-            print(" ".join(cmd))
-            self.state.logs.append(" ".join(cmd))
-            child = pexpect.spawn(cmd[0], cmd[1:], timeout=300)
-            while True:
-                try:
-                    child.expect(['\n'])
-                    line = child.before
-                    line = line.decode("utf-8", errors="ignore")
-                    line = strip(line)
-                    self.state.logs.append(line)
-                except pexpect.EOF:
-                    break
-            time.sleep(0.5)
-
-        cmd = [
-            arm_none_eabi_gdb,
-            "-ex", "set pagination off",
-            "-ex", f"target extended-remote {port}",
-            "-ex", "monitor tpwr enable",
-            "-ex", "monitor swd_scan",
-            "-ex", "set confirm off",
-            "-ex", f"attach {profile.get('attach', '1')}",
-            "-ex", f"load \"{file}\"",
-            "-ex", "quit",
-        ]
-        print(" ".join(cmd))
-        self.state.logs.append(" ".join(cmd))
-        child = pexpect.spawn(cmd[0], cmd[1:], timeout=300)
-        child.logfile_read = sys.stdout.buffer
-        while True:
-            try:
-                child.expect('\n')
-                line = child.before
-                line = line.decode("utf-8", errors="ignore")
-                line = strip(line)
-                self.state.logs.append(line)
-            except pexpect.EOF:
-                break
 
 
 if __name__ == "__main__":

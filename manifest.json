@@ -16,8 +16,8 @@
             ["0x110000", "smart_switch_a/app.bin"]
         ]
     },
-    "NRF52 Controller": {
-        "description": "NRF52 Controller",
+    "NRF52 Controller (BlackMagicProbe)": {
+        "description": "NRF52 Controller with BlackMagicProbe",
         "type": "bmp",
         "attach": 1,
         "tpwr": true,
