@@ -6,7 +6,8 @@ import sys
 import itertools
 import glob
 import shutil
-from FwFlasher import find_arm_none_eabi_gdb
+from bmp import find_arm_none_eabi_gdb
+from openocd import find_openocd
 
 create_dmg = False
 codesign_identity = None
@@ -35,6 +36,15 @@ if arm_none_eabi_gdb:
     pyinstaller_args.extend(["--add-binary", arm_none_eabi_gdb + ":bin"])
 else:
     print("arm-none-eabi-gdb not found")
+    sys.exit(1)
+
+openocd = find_openocd()
+if openocd:
+    pyinstaller_args.extend(["--add-binary", openocd[0] + ":bin"])
+    pyinstaller_args.extend(["--add-binary", os.path.join(openocd[0], "..", "libexec") + ":bin"])
+    pyinstaller_args.extend(["--add-data", openocd[1] + ":openocd/"])
+else:
+    print("openocd not found")
     sys.exit(1)
 
 print(pyinstaller_args)
