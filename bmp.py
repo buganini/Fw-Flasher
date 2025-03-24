@@ -31,12 +31,23 @@ class BMPBackend(Backend):
     @staticmethod
     def list_ports(main, profile):
         import glob
-        if platform.system() == "Darwin":
+        if sys.platform.startswith('darwin'):
             ports = glob.glob("/dev/cu.usbmodem*")
             for p in ports:
                 if p[:-1]+"1" in ports and p[:-1]+"3" in ports:
                     return [p[:-1]+"1"]
             return []
+        elif sys.platform.startswith('win'):
+            from serial.tools import list_ports
+            ports = list_ports.comports()
+            ports = [p for p in ports if len([x for x in ports if x.serial_number and x.serial_number==p.serial_number])==2]
+            ret = []
+            sn = set()
+            for p in ports:
+                if not p.serial_number in sn:
+                    ret.append(p.name)
+                    sn.add(p.serial_number)
+            return ret
         else:
             main.state.logs.append("Error: Unsupported platform")
             return []
@@ -65,7 +76,7 @@ class BMPBackend(Backend):
             return
 
         if port == "Auto":
-            ports = BMPBackend.list_ports(main)
+            ports = BMPBackend.list_ports(main, profile)
             if ports:
                 port = ports[0]
             else:
