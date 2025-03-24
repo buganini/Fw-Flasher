@@ -4,8 +4,12 @@
 
 ## Supported Backends
 * esptool
+    * type=esp*
 * Black Magic Probe
+    * type=bmp
 * OpenOCD
+    * type=openocd
+    * Currently, only CMSIS-DAP supports device enumeration
 
 ## Extra Dependencies for Black Magic Probe
 * Download [Arm GNU Toolchain](https://developer.arm.com/downloads/-/gnu-rm) and extract it to the root of the FwFlather so that `arm-none-eabi-gdb` is in the `gcc-arm-none-eabi-X.Y-Z/bin` directory
