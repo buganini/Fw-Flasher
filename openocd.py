@@ -26,7 +26,6 @@ def find_openocd():
 openocd = find_openocd()
 
 class OpenOCDBackend(Backend):
-    list_ports = None
     erase_flash = None
 
     @staticmethod
@@ -35,6 +34,43 @@ class OpenOCDBackend(Backend):
             print(f"Found {openocd}")
         else:
             main.state.logs.append("Error: OpenOCD not found")
+
+    @staticmethod
+    def list_ports(main, profile):
+        if not openocd:
+            return
+
+        interface = profile.get("interface", "")
+        if not os.path.isabs(interface):
+            interface = os.path.join(openocd[1], "scripts", "interface", interface)
+
+        ports = []
+
+        cmd = [
+            openocd[0],
+            "-d3",
+            "-f", interface,
+            "-c", "interface",
+        ]
+        print(" ".join(cmd))
+        child = pexpect.spawn(cmd[0], cmd[1:], timeout=300)
+        child.logfile_read = sys.stdout.buffer
+
+        serial_ident = "CMSIS-DAP: Serial# ="
+
+        while True:
+            try:
+                child.expect('\n')
+                line = child.before
+                line = line.decode("utf-8", errors="ignore")
+                line = strip(line)
+
+                if serial_ident in line:
+                    ports.append(line.split(serial_ident)[1].strip())
+            except pexpect.EOF:
+                break
+
+        return ports
 
     @staticmethod
     def flash(main, port, profile):
@@ -52,8 +88,14 @@ class OpenOCDBackend(Backend):
             main.state.logs.append(f"Error: File not found: {file}")
             return
 
-
         file = file.replace("\\", "/").replace("\"", "\\\"")
+
+        if port == "Auto":
+            ports = OpenOCDBackend.list_ports(main, profile)
+            if ports:
+                port = ports[0]
+            else:
+                port = None
 
         interface = profile.get("interface", "")
         if not os.path.isabs(interface):
@@ -81,6 +123,10 @@ class OpenOCDBackend(Backend):
             openocd[0],
             "-f", interface,
         ]
+
+        if port:
+            cmd.extend(["-c", f"adapter serial \"{port}\""])
+
         if transport:
             cmd.extend(["-c", f"transport select {profile.get('transport', 'jtag')}"])
         cmd.extend([

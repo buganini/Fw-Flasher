@@ -19,7 +19,7 @@ class UI(Application):
     def __init__(self):
         super().__init__(icon=resource_path("icon.ico"))
         self.state = state = State()
-        self.state.port = "Auto"
+        self.state.port = ""
         self.state.profile = ""
         self.state.profiles = []
         self.state.progress = 0
@@ -28,6 +28,7 @@ class UI(Application):
         self.state.mac = ""
         self.state.worker = None
         self.state.erase_flash = True
+        self.state.ports = []
         self.backend = None
 
     def content(self):
@@ -47,7 +48,7 @@ class UI(Application):
                         Label("Port")
                         with ComboBox(text_model=self.state("port")):
                             ComboBoxItem("Auto")
-                            for port in self.backend.list_ports(self):
+                            for port in self.state.ports:
                                 ComboBoxItem(port)
 
                     if self.backend and self.backend.erase_flash:
@@ -83,6 +84,11 @@ class UI(Application):
         if backend and backend != self.backend:
             backend.precheck(self)
             self.backend = backend
+            if backend.list_ports:
+                self.state.ports = backend.list_ports(self, self.state.profiles[self.state.profile])
+            else:
+                self.state.ports = []
+            self.state.port = "Auto"
 
     def load(self):
         file = OpenFile()

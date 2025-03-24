@@ -28,7 +28,7 @@ class BMPBackend(Backend):
     erase_flash = None
 
     @staticmethod
-    def list_ports(main):
+    def list_ports(main, profile):
         import glob
         if os.uname().sysname == "Darwin":
             ports = glob.glob("/dev/cu.usbmodem*")

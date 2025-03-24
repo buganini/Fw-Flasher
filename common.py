@@ -22,7 +22,7 @@ class Backend():
     show_progress = False
 
     @staticmethod
-    def list_ports(main):
+    def list_ports(main, profile):
         result = []
 
         if sys.platform.startswith('win'):
