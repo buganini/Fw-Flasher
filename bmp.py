@@ -4,6 +4,7 @@ import time
 import sys
 import pexpect
 import shutil
+import platform
 from common import *
 
 def find_arm_none_eabi_gdb():
@@ -30,7 +31,7 @@ class BMPBackend(Backend):
     @staticmethod
     def list_ports(main, profile):
         import glob
-        if os.uname().sysname == "Darwin":
+        if platform.system() == "Darwin":
             ports = glob.glob("/dev/cu.usbmodem*")
             for p in ports:
                 if p[:-1]+"1" in ports and p[:-1]+"3" in ports:
