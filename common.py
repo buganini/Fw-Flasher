@@ -10,7 +10,7 @@ if sys.platform.startswith('win'):
     spawn = PopenSpawn
 else:
     def spawn(cmd, timeout=30):
-        pexpect(cmd[0], cmd[1:], timeout=timeout)
+        return pexpect.spawn(cmd[0], cmd[1:], timeout=timeout)
 
 
 def strip(s):
