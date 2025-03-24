@@ -3,6 +3,15 @@ import os
 import re
 import glob
 import serial
+import pexpect
+
+if sys.platform.startswith('win'):
+    from pexpect.popen_spawn import PopenSpawn
+    spawn = PopenSpawn
+else:
+    def spawn(cmd, timeout=30):
+        pexpect(cmd[0], cmd[1:], timeout=timeout)
+
 
 def strip(s):
     s = re.sub(r'\x1b\[[0-9;]*m', '', s)

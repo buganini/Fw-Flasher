@@ -100,7 +100,7 @@ class BMPBackend(Backend):
             ]
             print(" ".join(cmd))
             main.state.logs.append(" ".join(cmd))
-            child = pexpect.spawn(cmd[0], cmd[1:], timeout=300)
+            child = spawn(cmd, timeout=300)
             while True:
                 try:
                     child.expect(['\n'])
@@ -125,7 +125,7 @@ class BMPBackend(Backend):
         ]
         print(" ".join(cmd))
         main.state.logs.append(" ".join(cmd))
-        child = pexpect.spawn(cmd[0], cmd[1:], timeout=300)
+        child = spawn(cmd, timeout=300)
         child.logfile_read = sys.stdout.buffer
         while True:
             try:

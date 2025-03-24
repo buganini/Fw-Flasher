@@ -53,7 +53,7 @@ class OpenOCDBackend(Backend):
             "-c", "interface",
         ]
         print(" ".join(cmd))
-        child = pexpect.spawn(cmd[0], cmd[1:], timeout=300)
+        child = spawn(cmd, timeout=300)
         child.logfile_read = sys.stdout.buffer
 
         serial_ident = "CMSIS-DAP: Serial# ="
@@ -135,7 +135,7 @@ class OpenOCDBackend(Backend):
         ])
         print(" ".join(cmd))
         main.state.logs.append(" ".join(cmd))
-        child = pexpect.spawn(cmd[0], cmd[1:], timeout=300)
+        child = spawn(cmd, timeout=300)
         child.logfile_read = sys.stdout.buffer
 
         while True:
