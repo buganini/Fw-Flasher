@@ -97,10 +97,13 @@ class BMPBackend(Backend):
                 try:
                     child.expect(['\n'])
                     line = child.before
-                    line = line.decode("utf-8", errors="ignore")
+                    if hasattr(line, "decode"):
+                        line = line.decode("utf-8", errors="ignore")
                     line = strip(line)
                     main.state.logs.append(line)
                 except pexpect.EOF:
+                    break
+                except wexpect.EOF:
                     break
             time.sleep(0.5)
 
@@ -123,8 +126,11 @@ class BMPBackend(Backend):
             try:
                 child.expect('\n')
                 line = child.before
-                line = line.decode("utf-8", errors="ignore")
+                if hasattr(line, "decode"):
+                    line = line.decode("utf-8", errors="ignore")
                 line = strip(line)
                 main.state.logs.append(line)
             except pexpect.EOF:
+                break
+            except wexpect.EOF:
                 break
