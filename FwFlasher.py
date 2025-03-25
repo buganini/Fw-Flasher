@@ -93,7 +93,7 @@ class UI(Application):
             self.state.erase_flash = self.state.profiles[self.state.profile].get("erase-flash", False)
 
     def load(self):
-        file = OpenFile()
+        file = OpenFile("Open Manifest", types="Manifest JSON (*.json)|.*json")
         if file:
             self.loadFile(file)
 
@@ -154,14 +154,8 @@ class UI(Application):
 if __name__ == "__main__":
     ui = UI()
 
-    manifest_json = "manifest.json"
-    if getattr(sys, 'frozen', False):
-        manifest_json = os.path.join(sys._MEIPASS, manifest_json)
-
     if len(sys.argv) > 1:
         ui.loadFile(sys.argv[1])
-    elif os.path.exists(manifest_json):
-        ui.loadFile(manifest_json)
 
     ui.run()
 

@@ -25,12 +25,6 @@ if platform.system()=="Darwin":
 else:
     pyinstaller_args.extend(["-i", 'resources/icon.ico'])
 
-# if len(sys.argv) > 1 and sys.argv[1].endswith(".json"):
-#     shutil.copy(sys.argv[1], "build/manifest.json")
-#     pyinstaller_args.extend(["--add-data", "build/manifest.json:."])
-# elif os.path.exists("manifest.json"):
-#     pyinstaller_args.extend(["--add-data", "manifest.json:."])
-
 arm_none_eabi_gdb = find_arm_none_eabi_gdb()
 if arm_none_eabi_gdb:
     pyinstaller_args.extend(["--add-binary", arm_none_eabi_gdb + ":bin"])
