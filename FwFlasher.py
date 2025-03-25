@@ -108,7 +108,7 @@ class UI(Application):
                     if not backend:
                         self.state.logs.append(f"Unsupported chip type \"{profile.get('type')}\" in profile \"{name}\"")
                 self.state.profile = list(self.state.profiles.keys())[0]
-                self.state.root = os.path.dirname(file)
+                self.state.root = os.path.abspath(os.path.dirname(file))
                 self.changeProfile(None)
 
     def getBackend(self, profile):
