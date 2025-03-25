@@ -55,9 +55,6 @@ class ESPBackend(Backend):
             main.state.logs.append("Error: Port not found")
             return
 
-        if main.state.erase_flash:
-            ESPBackend.erase_flash(main, port, profile)
-
         cmd = []
         cmd.extend(["--port", port])
         cmd.extend(["--chip", profile.get("type")])
@@ -67,6 +64,8 @@ class ESPBackend(Backend):
         if profile.get("no-stub", False):
             cmd.extend(["--no-stub"])
         cmd.extend(["write-flash"])
+        if main.state.erase_flash:
+            cmd.extend(["-e"])
         cmd.extend(["--flash-mode", profile.get("flash-mode", "dio")])
         cmd.extend(["--flash-freq", profile.get("flash-freq", "80m")])
         cmd.extend(["--flash-size", profile.get("flash-size", "4MB")])
@@ -92,20 +91,3 @@ class ESPBackend(Backend):
             main.state.logs.append(f"Error: {e}")
             main.state.logs.append(f"Error: {traceback.format_exc()}")
             traceback.print_exc()
-
-    @staticmethod
-    def erase_flash(main, port, profile):
-        print("Erase Flash")
-        eraser = Thread(target=ESPBackend._erase_flash, args=[port, profile], daemon=True)
-        eraser.start()
-        eraser.join()
-        main.state.logs.append("Erase Flash Done")
-
-    @staticmethod
-    def _erase_flash(port, profile):
-        cmd = []
-        cmd.extend(["--port", port])
-        cmd.extend(["--chip", profile.get("type")])
-        cmd.extend(["erase-flash"])
-        cmd = [str(x) for x in cmd]
-        esptool.main(cmd)
