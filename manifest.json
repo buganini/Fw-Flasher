@@ -2,6 +2,7 @@
     "ESP Controller": {
         "description": "ESP controller",
         "type": "esp32c3",
+        "erase-flash": false,
         "baudrate": 460800,
         "before": "default_reset",
         "after": "hard_reset",

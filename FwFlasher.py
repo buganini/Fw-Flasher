@@ -27,7 +27,7 @@ class UI(Application):
         self.state.logs = []
         self.state.mac = ""
         self.state.worker = None
-        self.state.erase_flash = True
+        self.state.erase_flash = False
         self.state.ports = []
         self.backend = None
 
@@ -89,6 +89,7 @@ class UI(Application):
             else:
                 self.state.ports = []
             self.state.port = "Auto"
+            self.state.erase_flash = self.state.profiles[self.state.profile].get("erase-flash", False)
 
     def load(self):
         file = OpenFile()
