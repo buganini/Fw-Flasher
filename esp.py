@@ -49,7 +49,7 @@ class ESPBackend(Backend):
         main.state.logs = []
 
         if port == "Auto":
-            port = ESPBackend.list_ports(main)[0]
+            port = ESPBackend.list_ports(main, profile)[0]
 
         if not port:
             main.state.logs.append("Error: Port not found")
