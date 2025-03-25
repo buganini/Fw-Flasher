@@ -3,12 +3,11 @@ import os
 import re
 import glob
 import serial
-import wexpect
 import pexpect
 
 if sys.platform.startswith('win'):
-    def spawn(cmd, timeout=30):
-        return wexpect.spawn(cmd[0], cmd[1:], timeout=timeout)
+    from pexpect.popen_spawn import PopenSpawn
+    spawn = PopenSpawn
 else:
     def spawn(cmd, timeout=30):
         return pexpect.spawn(cmd[0], cmd[1:], timeout=timeout)
