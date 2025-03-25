@@ -62,12 +62,15 @@ class OpenOCDBackend(Backend):
             try:
                 child.expect('\n')
                 line = child.before
-                line = line.decode("utf-8", errors="ignore")
+                if hasattr(line, "decode"):
+                    line = line.decode("utf-8", errors="ignore")
                 line = strip(line)
 
                 if serial_ident in line:
                     ports.append(line.split(serial_ident)[1].strip())
             except pexpect.EOF:
+                break
+            except wexpect.EOF:
                 break
 
         return ports
@@ -142,10 +145,13 @@ class OpenOCDBackend(Backend):
             try:
                 child.expect('\n')
                 line = child.before
-                line = line.decode("utf-8", errors="ignore")
+                if hasattr(line, "decode"):
+                    line = line.decode("utf-8", errors="ignore")
                 line = strip(line)
                 main.state.logs.append(line)
                 if "Programming Finished" in line:
                     main.ok = True
             except pexpect.EOF:
+                break
+            except wexpect.EOF:
                 break
