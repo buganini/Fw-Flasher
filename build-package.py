@@ -42,7 +42,7 @@ openocd = find_openocd()
 if openocd:
     pyinstaller_args.extend(["--add-binary", openocd[0] + ":bin"])
     if not sys.platform.startswith('win'):
-        pyinstaller_args.extend(["--add-binary", os.path.join(openocd[0], "..", "libexec") + ":bin"])
+        pyinstaller_args.extend(["--add-binary", os.path.join(os.path.dirname(openocd[0]), "..", "libexec") + ":bin"])
     pyinstaller_args.extend(["--add-data", openocd[1] + ":openocd/"])
 else:
     print("openocd not found")
