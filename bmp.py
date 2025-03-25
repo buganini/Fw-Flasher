@@ -104,6 +104,7 @@ class BMPBackend(Backend):
                     break
             time.sleep(0.5)
 
+        file = file.replace("\\", "\\\\").replace(" ", "\\ ")
         cmd = [
             arm_none_eabi_gdb,
             "-ex", "set pagination off",
@@ -112,7 +113,7 @@ class BMPBackend(Backend):
             "-ex", "monitor swd_scan",
             "-ex", "set confirm off",
             "-ex", f"attach {profile.get('attach', '1')}",
-            "-ex", f"load \"{file}\"",
+            "-ex", f"load {file}",
             "-ex", "quit",
         ]
         print(" ".join(cmd))
