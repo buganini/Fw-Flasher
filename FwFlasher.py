@@ -82,6 +82,7 @@ class UI(Application):
     def changeProfile(self, e):
         backend = self.getBackend(self.state.profiles[self.state.profile])
         if backend and backend != self.backend:
+            self.state.logs = []
             backend.precheck(self)
             self.backend = backend
             if backend.list_ports:
