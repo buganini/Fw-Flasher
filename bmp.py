@@ -4,7 +4,7 @@ import time
 import sys
 import pexpect
 import shutil
-import platform
+import re
 from common import *
 
 def find_arm_none_eabi_gdb():
@@ -30,27 +30,19 @@ class BMPBackend(Backend):
 
     @staticmethod
     def list_ports(main, profile):
-        import glob
-        if sys.platform.startswith('darwin'):
-            ports = glob.glob("/dev/cu.usbmodem*")
-            for p in ports:
-                if p[:-1]+"1" in ports and p[:-1]+"3" in ports:
-                    return [p[:-1]+"1"]
-            return []
-        elif sys.platform.startswith('win'):
-            from serial.tools import list_ports
-            ports = list_ports.comports()
-            ports = [p for p in ports if len([x for x in ports if x.serial_number and x.serial_number==p.serial_number])==2]
-            ret = []
-            sn = set()
-            for p in ports:
-                if not p.serial_number in sn:
-                    ret.append(p.name)
-                    sn.add(p.serial_number)
-            return ret
-        else:
-            main.state.logs.append("Error: Unsupported platform")
-            return []
+        from serial.tools import list_ports
+        ports = list_ports.comports()
+        ports = [p for p in ports if len([x for x in ports if x.serial_number and x.serial_number==p.serial_number])==2]
+        ports.sort(key=lambda p: [int(x) if x.isdigit() else x.lower () for x in re.findall(r"(\d+|\D+)", p.name)])
+        ret = []
+        sn = set()
+        for p in ports:
+            if not p.serial_number in sn:
+                ret.append(p.name)
+                sn.add(p.serial_number)
+        if not sys.platform.startswith('win'):
+            ret = ["/dev/"+p for p in ret]
+        return ret
 
     @staticmethod
     def precheck(main):
