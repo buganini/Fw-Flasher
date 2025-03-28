@@ -35,7 +35,9 @@ class Backend():
         result = []
 
         if sys.platform.startswith('win'):
-            ports = ['COM%s' % (i + 1) for i in range(256)]
+            from serial.tools import list_ports
+            ports = list_ports.comports()
+            ports = [p.name for p in ports if p.vid]
         elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
             # this excludes your current terminal "/dev/tty"
             ports = glob.glob('/dev/tty[A-Za-z]*')
