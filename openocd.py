@@ -26,8 +26,6 @@ def find_openocd():
 openocd = find_openocd()
 
 class OpenOCDBackend(Backend):
-    erase_flash = None
-
     @staticmethod
     def precheck(main):
         if openocd:
@@ -73,6 +71,56 @@ class OpenOCDBackend(Backend):
         return ports
 
     @staticmethod
+    def erase_flash(main, port, profile):
+        cmd = [
+            openocd[0],
+            "-f", OpenOCDBackend.get_interface(profile),
+        ]
+
+        transport = profile.get('transport')
+        if transport:
+            cmd.extend(["-c", f"transport select {transport}"])
+
+        cmd.extend([
+            "-f", OpenOCDBackend.get_target(profile),
+            "-c", "init",
+            "-c", "reset halt",
+            "-c", "flash erase_sector 0 0 last",
+            "-c", "exit",
+        ])
+        print(" ".join(cmd))
+        main.state.logs.append(" ".join(cmd))
+        child = spawn(cmd, timeout=300)
+        child.logfile_read = sys.stdout.buffer
+
+        while True:
+            try:
+                child.expect('\n')
+                line = child.before
+                if hasattr(line, "decode"):
+                    line = line.decode("utf-8", errors="ignore")
+                line = strip(line)
+                main.state.logs.append(line)
+                if "Programming Finished" in line:
+                    main.ok = True
+            except pexpect.EOF:
+                break
+
+    @staticmethod
+    def get_interface(profile):
+        interface = profile.get("interface", "")
+        if not os.path.isabs(interface):
+            interface = os.path.join(openocd[1], "scripts", "interface", interface)
+        return interface
+
+    @staticmethod
+    def get_target(profile):
+        target = profile.get("target", "")
+        if not os.path.isabs(target):
+            target = os.path.join(openocd[1], "scripts", "target", target)
+        return target
+
+    @staticmethod
     def flash(main, port, profile):
         if not openocd:
             return
@@ -97,15 +145,10 @@ class OpenOCDBackend(Backend):
             else:
                 port = None
 
-        interface = profile.get("interface", "")
-        if not os.path.isabs(interface):
-            interface = os.path.join(openocd[1], "scripts", "interface", interface)
 
         main.ok = True
-        target = profile.get("target", "")
-        if not os.path.isabs(target):
-            target = os.path.join(openocd[1], "scripts", "target", target)
-
+        interface = OpenOCDBackend.get_interface(profile)
+        target = OpenOCDBackend.get_target(profile)
         if not os.path.exists(interface):
             main.state.logs.append(f"Error: Interface file not found: {interface}")
             main.ok = False
@@ -117,7 +160,8 @@ class OpenOCDBackend(Backend):
         if not main.ok:
             return
 
-        transport = profile.get('transport')
+        if main.state.erase_flash:
+            OpenOCDBackend.erase_flash(main, port, profile)
 
         cmd = [
             openocd[0],
@@ -127,8 +171,10 @@ class OpenOCDBackend(Backend):
         if port:
             cmd.extend(["-c", f"adapter serial \"{port}\""])
 
+        transport = profile.get('transport')
         if transport:
-            cmd.extend(["-c", f"transport select {profile.get('transport', 'jtag')}"])
+            cmd.extend(["-c", f"transport select {transport}"])
+
         cmd.extend([
             "-f", target,
             "-c", f"program \"{file}\" verify reset exit",
