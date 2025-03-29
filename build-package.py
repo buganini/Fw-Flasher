@@ -25,6 +25,8 @@ if platform.system()=="Darwin":
 else:
     pyinstaller_args.extend(["-i", 'resources/icon.ico'])
 
+pyinstaller_args.extend(["--collect-data", "esptool"])
+
 arm_none_eabi_gdb = find_arm_none_eabi_gdb()
 if arm_none_eabi_gdb:
     pyinstaller_args.extend(["--add-binary", arm_none_eabi_gdb + ":bin"])
