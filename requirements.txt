@@ -1,5 +1,5 @@
 git+https://github.com/espressif/esptool.git # for unreleased esptool.logger.TemplateLogger
-git+https://github.com/buganini/PUI.git # for unreleased PUIView.wait()
+QPUIQ
 pexpect
 PySide6
 pyinstaller
