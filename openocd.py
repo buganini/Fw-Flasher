@@ -160,6 +160,33 @@ class OpenOCDBackend(Backend):
         if not main.ok:
             return
 
+        if profile.get("before"):
+            cmd = [
+                openocd[0],
+                "-f", interface,
+                "-f", target,
+                "-c", "init",
+            ]
+            transport = profile.get('transport')
+            if transport:
+                cmd.extend(["-c", f"transport select {transport}"])
+            for c in profile.get("before"):
+                cmd.extend(["-c", c])
+            cmd.extend(["-c", "exit"])
+            print(" ".join(cmd))
+            main.state.logs.append(" ".join(cmd))
+            child = spawn(cmd, timeout=300)
+            child.logfile_read = sys.stdout.buffer
+            while True:
+                try:
+                    child.expect('\n')
+                    line = child.before
+                    line = line.decode("utf-8", errors="ignore")
+                    line = strip(line)
+                    main.state.logs.append(line)
+                except pexpect.EOF:
+                    break
+
         if main.state.erase_flash:
             OpenOCDBackend.erase_flash(main, port, profile)
 
@@ -195,3 +222,30 @@ class OpenOCDBackend(Backend):
                     main.ok = True
             except pexpect.EOF:
                 break
+
+        if profile.get("after"):
+            cmd = [
+                openocd[0],
+                "-f", interface,
+                "-f", target,
+                "-c", "init",
+            ]
+            transport = profile.get('transport')
+            if transport:
+                cmd.extend(["-c", f"transport select {transport}"])
+            for c in profile.get("after"):
+                cmd.extend(["-c", c])
+            cmd.extend(["-c", "exit"])
+            print(" ".join(cmd))
+            main.state.logs.append(" ".join(cmd))
+            child = spawn(cmd, timeout=300)
+            child.logfile_read = sys.stdout.buffer
+            while True:
+                try:
+                    child.expect('\n')
+                    line = child.before
+                    line = line.decode("utf-8", errors="ignore")
+                    line = strip(line)
+                    main.state.logs.append(line)
+                except pexpect.EOF:
+                    break

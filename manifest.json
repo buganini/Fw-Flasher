@@ -24,12 +24,36 @@
         "tpwr": true,
         "load": "nrf52_controller/merged.hex"
     },
-    "NRF52 Controller (OpenOCD)": {
-        "description": "NRF52 Controller with OpenOCD",
+    "NRF52 Controller (OpenOCD/CMSIS-DAP)": {
+        "description": "NRF52 Controller with OpenOCD/CMSIS-DAP",
         "type": "openocd",
         "interface": "cmsis-dap.cfg",
         "transport": "swd",
         "target": "nrf52.cfg",
         "program": "nrf52_controller/merged.hex"
+    },
+    "NRF52 Controller (OpenOCD/JLink)": {
+        "description": "NRF52 Controller with OpenOCD/JLink",
+        "type": "openocd",
+        "interface": "jlink.cfg",
+        "transport": "swd",
+        "target": "nrf52.cfg",
+        "program": "nrf52_controller/merged.hex"
+    },
+    "STM32 Controller (OpenOCD/ST-Link)": {
+        "description": "STM32 Controller with OpenOCD/ST-Link",
+        "type": "openocd",
+        "interface": "stlink.cfg",
+        "target": "stm32f1x.cfg",
+        "before": [
+            "reset halt",
+            "stm32f1x unlock 0"
+        ],
+        "after": [
+            "reset halt",
+            "stm32f1x lock 0",
+            "reset run"
+        ],
+        "program": "bin.hex"
     }
 }
