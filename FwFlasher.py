@@ -156,6 +156,8 @@ if __name__ == "__main__":
 
     if len(sys.argv) > 1:
         ui.loadFile(sys.argv[1])
+    elif os.path.exists("manifest/manifest.json"):
+        ui.loadFile("manifest/manifest.json")
 
     ui.run()
 
