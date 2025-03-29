@@ -54,6 +54,7 @@
             "stm32f1x lock 0",
             "reset run"
         ],
-        "program": "bin.hex"
+        "program": "firmware.bin",
+        "program-offset": "0x08000000"
     }
 }

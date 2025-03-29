@@ -202,9 +202,14 @@ class OpenOCDBackend(Backend):
         if transport:
             cmd.extend(["-c", f"transport select {transport}"])
 
+        program_offset = profile.get('program-offset')
+        if program_offset:
+            program_offset = f" {program_offset}"
+        else:
+            program_offset = ""
         cmd.extend([
             "-f", target,
-            "-c", f"program \"{file}\" verify reset exit",
+            "-c", f"program \"{file}\" verify reset exit{program_offset}",
         ])
         print(" ".join(cmd))
         main.state.logs.append(" ".join(cmd))
