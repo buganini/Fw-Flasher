@@ -54,7 +54,7 @@ class UI(Application):
                     if self.backend and self.backend.erase_flash:
                         Checkbox("Erase Flash", self.state("erase_flash"))
 
-                    if self.state.worker is None:
+                    if self.state.profile and self.state.worker is None:
                         Button("Flash").click(lambda e: self.flash())
 
                     Spacer()
