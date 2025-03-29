@@ -15,7 +15,7 @@ class ESPBackend(Backend):
 
         if hasattr(log, "set_logger"):
             class CustomLogger(TemplateLogger):
-                def print(self, message, *args, **kwargs):
+                def print(self, message="", *args, **kwargs):
                     print(f"{message}", *args, **kwargs)
                     ui_changed = False
                     if not message.startswith("Writing at"):
@@ -36,12 +36,20 @@ class ESPBackend(Backend):
                 def error(self, message):
                     self.print(message, file=sys.stderr)
 
-                def print_overwrite(self, message, last_line=False):
-                    # Overwriting not needed, print normally
-                    self.print(message)
+                def stage(self, finish=False):
+                    # Collapsible stages not needed in this example
+                    pass
 
-                def set_progress(self, percentage):
-                    main.state.progress = percentage
+                def progress_bar(
+                    self,
+                    cur_iter,
+                    total_iters,
+                    prefix = "",
+                    suffix = "",
+                    bar_length: int = 30,
+                ):
+                    percent = int(100 * (cur_iter / float(total_iters)))
+                    main.state.progress = percent
                     main.wait()
 
             log.set_logger(CustomLogger())
