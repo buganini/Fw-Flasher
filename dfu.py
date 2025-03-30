@@ -10,7 +10,7 @@ from common import *
 def find_dfu_util():
     try:
         base_path = sys._MEIPASS
-        bin_path = os.path.join(base_path, "dfu-util")
+        bin_path = os.path.join(base_path, "bin")
         dfu_util = glob.glob(os.path.join(bin_path, "dfu-util*"))
         if dfu_util:
             return dfu_util[0]

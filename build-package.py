@@ -8,6 +8,7 @@ import glob
 import shutil
 from bmp import find_arm_none_eabi_gdb
 from openocd import find_openocd
+from dfu import find_dfu_util
 
 create_dmg = False
 codesign_identity = None
@@ -42,6 +43,13 @@ if openocd:
     pyinstaller_args.extend(["--add-data", openocd[1] + ":openocd/"])
 else:
     print("openocd not found")
+    sys.exit(1)
+
+dfu_util = find_dfu_util()
+if dfu_util:
+    pyinstaller_args.extend(["--add-binary", dfu_util + ":bin"])
+else:
+    print("dfu-util not found")
     sys.exit(1)
 
 print(pyinstaller_args)
