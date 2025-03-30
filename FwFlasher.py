@@ -33,7 +33,7 @@ class UI(Application):
 
     def content(self):
         title = f"Firmware Flasher v{VERSION} (esptool {esptool.__version__}, PUI {PUI.__version__} {PUI_BACKEND})"
-        with Window(title=title, size=(800, 600), icon=resource_path("icon.ico")):
+        with Window(title=title, size=(800, 600), icon=resource_path("icon.ico")).keypress(self.keypress):
             with VBox():
                 with HBox():
                     Label("Profile")
@@ -55,7 +55,7 @@ class UI(Application):
                         Checkbox("Erase Flash", self.state("erase_flash"))
 
                     if self.state.profile and self.state.worker is None:
-                        Button("Flash").click(lambda e: self.flash())
+                        Button("Flash (Enter)").click(lambda e: self.flash())
 
                     Spacer()
 
@@ -78,6 +78,10 @@ class UI(Application):
 
                 with Scroll().layout(weight=1).scrollY(Scroll.END):
                     Text("\n".join(self.state.logs))
+
+    def keypress(self, e):
+        if e.text == "\r":
+            self.flash()
 
     def changeProfile(self, e):
         backend = self.getBackend(self.state.profiles[self.state.profile])
