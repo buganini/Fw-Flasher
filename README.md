@@ -14,7 +14,8 @@ Engineers deliver firmware and a manifest.json file for all the complicated sett
     * OpenOCD
         * type=openocd
         * Currently, only CMSIS-DAP supports device enumeration
-    * DFU-Util
+    * dfu-util
+        * type=dfu
 
 ## Known Issue
 * BlackMagicProbe/OpenOCD backends don't have progressive output due to the limit of pexpect
