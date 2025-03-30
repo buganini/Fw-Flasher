@@ -7,7 +7,7 @@ from collections import OrderedDict
 from PUI.PySide6 import *
 import PUI
 
-VERSION = "0.6"
+VERSION = "0.7"
 
 from common import *
 from esp import ESPBackend
