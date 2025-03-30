@@ -114,7 +114,13 @@ class DFUBackend(Backend):
             if dfuse_address:
                 args.extend(["--dfuse-address", dfuse_address])
 
-            args.extend(["--download", download['download']])
+            file = download['download']
+            if os.path.isabs(file):
+                pass
+            else:
+                file = os.path.join(main.state.root, file)
+
+            args.extend(["--download", file])
 
             alt = download.get('alt')
             if alt is not None:
