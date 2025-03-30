@@ -12,6 +12,8 @@ def find_dfu_util():
         base_path = sys._MEIPASS
         bin_path = os.path.join(base_path, "bin")
         dfu_util = glob.glob(os.path.join(bin_path, "dfu-util*"))
+        if sys.platform.startswith('win'):
+            dfu_util = [x for x in dfu_util if "static" in x]
         if dfu_util:
             return dfu_util[0]
     except Exception:
