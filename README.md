@@ -14,6 +14,7 @@ Engineers deliver firmware and a manifest.json file for all the complicated sett
     * OpenOCD
         * type=openocd
         * Currently, only CMSIS-DAP supports device enumeration
+    * DFU-Util
 
 ## Known Issue
 * BlackMagicProbe/OpenOCD backends don't have progressive output due to the limit of pexpect
@@ -25,4 +26,5 @@ Engineers deliver firmware and a manifest.json file for all the complicated sett
 
 ### Extra Dependencies
 * Download [Arm GNU Toolchain](https://developer.arm.com/downloads/-/gnu-rm) and extract it to the root of the FwFlather so that `arm-none-eabi-gdb` is in the `gcc-arm-none-eabi-X.Y-Z/bin` directory
-* Download [OpenOCD](https://github.com/xpack-dev-tools/openocd-xpack/releases) and extract it to the root of the FwFlasher so that `openocd` os in the `*openocd-X.Y-Z/bin` directory
+* Download [OpenOCD](https://github.com/xpack-dev-tools/openocd-xpack/releases) and extract it to the root of the FwFlasher so that `openocd` is in the `*openocd-X.Y-Z/bin` directory
+* Download [dfu-util](https://dfu-util.sourceforge.net/releases/) and extract it to the root of the FwFlasher so that `dfu-util` is in the `dfu-util-X.Y-binaries/osname/` directory

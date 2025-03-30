@@ -10,8 +10,9 @@ import PUI
 VERSION = "0.7"
 
 from common import *
-from esp import ESPBackend
 from bmp import BMPBackend
+from dfu import DFUBackend
+from esp import ESPBackend
 from openocd import OpenOCDBackend
 
 
@@ -122,6 +123,8 @@ class UI(Application):
             return BMPBackend
         elif profile.get("type", "") == "openocd":
             return OpenOCDBackend
+        elif profile.get("type", "") == "dfu":
+            return DFUBackend
         else:
             print("Unsupported chip type: %s" % profile.get("type"))
             return None
