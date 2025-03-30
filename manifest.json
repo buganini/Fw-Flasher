@@ -60,7 +60,12 @@
     "STM32 Controller (DFU)": {
         "description": "NRF52 Controller with DFU",
         "type": "dfu",
-        "dfuse-address": "0x08002000:leave",
-        "download": "blackmagic_native_firmware.bin"
+        "downloads": [
+            {
+                "dfuse-address": "0x08002000:leave",
+                "download": "blackmagic_native_firmware.bin",
+                "reset": true
+            }
+        ]
     }
 }

@@ -71,14 +71,19 @@ class DFUBackend(Backend):
 
         main.state.logs = []
 
-        file = profile.get('download', '')
-        if os.path.isabs(file):
-            pass
-        else:
-            file = os.path.join(main.state.root, file)
-        if not os.path.exists(file):
-            main.state.logs.append(f"Error: File not found: {file}")
-            return
+        files = []
+        downloads = profile.get('downloads', [])
+        for download in downloads:
+            files.append(download['download'])
+
+        for file in files:
+            if os.path.isabs(file):
+                pass
+            else:
+                file = os.path.join(main.state.root, file)
+            if not os.path.exists(file):
+                main.state.logs.append(f"Error: File not found: {file}")
+                return
 
         if port == "Auto":
             ports = DFUBackend.list_ports(main, profile)
@@ -100,33 +105,47 @@ class DFUBackend(Backend):
         else:
             return
 
-        cmd = [
-            dfu_util,
-            "-p", device_path,
-        ]
+        tasks = []
+        for download in downloads:
+            args = []
+            dfuse_address = profile.get('dfuse-address', '0x08002000:leave')
+            if dfuse_address:
+                args.extend(["--dfuse-address", dfuse_address])
 
-        dfuse_address = profile.get('dfuse-address', '0x08002000:leave')
-        if dfuse_address:
-            cmd.extend(["--dfuse-address", dfuse_address])
+            args.extend(["--download", download['download']])
 
-        cmd.extend(["--download", file])
+            alt = download.get('alt')
+            if alt is not None:
+                args.extend(["--alt", str(alt)])
 
-        print(" ".join(cmd))
-        main.state.logs.append(" ".join(cmd))
-        child = spawn(cmd, timeout=300)
-        child.logfile_read = sys.stdout.buffer
-        while True:
-            try:
-                child.expect(['\r', '\n'])
-                line = child.before
-                line = line.decode("utf-8", errors="ignore")
-                line = strip(line)
-                if not line:
-                    continue
-                m = re.search(r'\] *(\d+)%', line)
-                if m:
-                    main.state.progress = int(m.group(1))
-                    continue
-                main.state.logs.append(line)
-            except pexpect.EOF:
-                break
+            if download.get('reset'):
+                args.extend(["--reset"])
+
+            tasks.append(args)
+
+        for task in tasks:
+            cmd = [
+                dfu_util,
+                "-p", device_path,
+                *task
+            ]
+
+            print(" ".join(cmd))
+            main.state.logs.append(" ".join(cmd))
+            child = spawn(cmd, timeout=300)
+            child.logfile_read = sys.stdout.buffer
+            while True:
+                try:
+                    child.expect(['\r', '\n'])
+                    line = child.before
+                    line = line.decode("utf-8", errors="ignore")
+                    line = strip(line)
+                    if not line:
+                        continue
+                    m = re.search(r'\] *(\d+)%', line)
+                    if m:
+                        main.state.progress = int(m.group(1))
+                        continue
+                    main.state.logs.append(line)
+                except pexpect.EOF:
+                    break
