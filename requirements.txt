@@ -2,5 +2,5 @@ git+https://github.com/espressif/esptool.git # for unreleased esptool.logger.Tem
 QPUIQ
 pyserial
 pexpect
-PySide6
+PySide6_Essentials
 pyinstaller
