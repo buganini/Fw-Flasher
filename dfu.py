@@ -98,7 +98,7 @@ class DFUBackend(Backend):
             main.state.logs.append("Error: DFU port not found")
             return
 
-        main.ok = True
+        main.ok = False
 
         device_path = re.search(r'path="([^"]+)"', port)
         print("device_path", device_path)
@@ -131,6 +131,8 @@ class DFUBackend(Backend):
 
             tasks.append(args)
 
+        has_progress = False
+
         for task in tasks:
             cmd = [
                 dfu_util,
@@ -153,7 +155,11 @@ class DFUBackend(Backend):
                     m = re.search(r'\] *(\d+)%', line)
                     if m:
                         main.state.progress = int(m.group(1))
+                        has_progress = True
                         continue
                     main.state.logs.append(line)
                 except pexpect.EOF:
                     break
+
+        if has_progress:
+            main.ok = True
