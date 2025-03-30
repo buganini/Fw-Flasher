@@ -16,6 +16,7 @@ Engineers deliver firmware and a manifest.json file for all the complicated sett
         * Currently, only CMSIS-DAP supports device enumeration
     * dfu-util
         * type=dfu
+        * Still needs zadig to fix driver issue on windows
 
 ## Known Issue
 * BlackMagicProbe/OpenOCD backends don't have progressive output due to the limit of pexpect
