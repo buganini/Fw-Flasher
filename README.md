@@ -18,6 +18,12 @@ Engineers deliver firmware and a manifest.json file for all the complicated sett
         * type=dfu
         * Still needs zadig to fix driver issue on windows
 
+* Cross-Platform
+    * Linux
+    * macOS (tested with M2)
+    * Windows x64
+
+
 ## Known Issue
 * BlackMagicProbe/OpenOCD backends don't have progressive output due to the limit of pexpect
 
