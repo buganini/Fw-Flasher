@@ -25,7 +25,7 @@ Engineers deliver firmware and a manifest.json file for all the complicated sett
 
 
 ## Known Issue
-* BlackMagicProbe/OpenOCD backends don't have progressive output due to the limit of pexpect
+* BlackMagicProbe/OpenOCD backends don't have progressive output on Windows due to the limit of pexpect
 
 ## Screenshots
 ![Flashing](screenshots/flashing.png)
