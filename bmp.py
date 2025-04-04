@@ -110,12 +110,18 @@ class BMPBackend(Backend):
             "-ex", "set pagination off",
             "-ex", f"target extended-remote {port}",
             "-ex", "monitor tpwr enable",
+        ]
+        if profile.get("connect_rst", False):
+            cmd.extend([
+                "-ex", "monitor connect_rst enable",
+            ])
+        cmd.extend([
             "-ex", "monitor swd_scan",
             "-ex", "set confirm off",
             "-ex", f"attach {profile.get('attach', '1')}",
             "-ex", f"load {file}",
             "-ex", "quit",
-        ]
+        ])
         print(" ".join(cmd))
         main.state.logs.append(" ".join(cmd))
         child = spawn(cmd, timeout=300)

@@ -22,6 +22,7 @@
         "type": "bmp",
         "attach": 1,
         "tpwr": true,
+        "connect_rst": true,
         "load": "nrf52_controller/merged.hex"
     },
     "NRF52 Controller (OpenOCD/CMSIS-DAP)": {
