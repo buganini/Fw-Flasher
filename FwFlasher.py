@@ -7,7 +7,7 @@ from collections import OrderedDict
 from PUI.PySide6 import *
 import PUI
 
-VERSION = "0.7"
+VERSION = "0.8"
 
 from common import *
 from bmp import BMPBackend
