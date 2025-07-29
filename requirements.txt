@@ -1,4 +1,4 @@
-git+https://github.com/espressif/esptool.git # for unreleased esptool.logger.TemplateLogger
+esptool==5.0.1
 QPUIQ
 pyserial
 pexpect

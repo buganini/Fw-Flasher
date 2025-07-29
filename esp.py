@@ -52,6 +52,10 @@ class ESPBackend(Backend):
                     main.state.progress = percent
                     main.wait()
 
+                def set_verbosity(self, verbosity):
+                    # Set verbosity level not needed in this example
+                    pass
+
             log.set_logger(CustomLogger())
 
         main.state.logs = []
