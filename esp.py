@@ -97,9 +97,11 @@ class ESPBackend(Backend):
         try:
             esptool.main(cmd)
             print("esptool.main() done")
+            main.state.progress = 100
         except Exception as e:
             import traceback
             main.ok = False
+            main.state.progress = 0
             main.state.logs.append(f"Error: {e}")
             main.state.logs.append(f"Error: {traceback.format_exc()}")
             traceback.print_exc()

@@ -26,6 +26,7 @@ arm_none_eabi_gdb = find_arm_none_eabi_gdb()
 
 class BMPBackend(Backend):
     erase_flash = None
+    show_progress = True
 
     @staticmethod
     def list_ports(main, profile):
@@ -56,6 +57,7 @@ class BMPBackend(Backend):
             return
 
         main.state.logs = []
+        main.state.progress = 0
 
         file = profile.get('load', '')
         if os.path.isabs(file):
@@ -118,6 +120,14 @@ class BMPBackend(Backend):
         main.state.logs.append(" ".join(cmd))
         for line in spawn_gdb(cmd):
             line = strip(line)
+            if line.startswith("+download,"):
+                kv = {k:v[1:-1] for k,v in [kv.split("=") for kv in line[11:-1].split(",")]}
+                if "total-size" in kv and "total-sent" in kv:
+                    main.state.progress = int(int(kv["total-sent"]) / int(kv["total-size"]) * 100)
+                main.wait()
             if "Detaching from program" in line:
+                main.state.progress = 100
                 main.ok = True
             main.state.logs.append(line)
+        if not main.ok:
+            main.state.progress = 0
