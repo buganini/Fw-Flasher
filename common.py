@@ -19,7 +19,6 @@ def spawn(command, **kwargs):
 
     # Read output line by line and print simultaneously
     for line in process.stdout:
-        # print(line, end='')  # Print to console
         sys.stdout.flush()   # Force immediate output
         line = line.rstrip("\r\n")
         print(line)
@@ -40,7 +39,7 @@ def spawn_gdbmi(command):
             else:
                 yield line
         else:
-            yield None
+            yield ""
 
 def strip(s):
     s = re.sub(r'\x1b\[[0-9;]*m', '', s)
