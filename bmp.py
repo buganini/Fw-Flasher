@@ -93,7 +93,7 @@ class BMPBackend(Backend):
             ]
             print(" ".join(cmd))
             main.state.logs.append(" ".join(cmd))
-            for line in spawn_gdb(cmd):
+            for line in spawn_gdbmi(cmd):
                 line = strip(line)
                 main.state.logs.append(line)
             time.sleep(0.5)
@@ -118,7 +118,7 @@ class BMPBackend(Backend):
         ])
         print(" ".join(cmd))
         main.state.logs.append(" ".join(cmd))
-        for line in spawn_gdb(cmd):
+        for line in spawn_gdbmi(cmd):
             line = strip(line)
             if line.startswith("+download,"):
                 kv = {k:v[1:-1] for k,v in [kv.split("=") for kv in line[11:-1].split(",")]}

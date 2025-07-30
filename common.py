@@ -30,7 +30,7 @@ def spawn(command, **kwargs):
 
     return return_code
 
-def spawn_gdb(command):
+def spawn_gdbmi(command):
     for line in spawn(command):
         if line:
             if line[0] in "@~&":
