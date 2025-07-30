@@ -78,7 +78,7 @@ class BMPBackend(Backend):
             main.state.logs.append("Error: BMP port not found")
             return
 
-        main.ok = True
+        main.ok = False
 
         if profile.get("tpwr", True):
             main.state.logs.append(f"TPWR power cycle")
@@ -132,6 +132,8 @@ class BMPBackend(Backend):
                 line = child.before
                 line = line.decode("utf-8", errors="ignore")
                 line = strip(line)
+                if "Transfer rate" in line:
+                    main.ok = True
                 main.state.logs.append(line)
             except pexpect.EOF:
                 break
