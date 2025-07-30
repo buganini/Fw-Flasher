@@ -1,6 +1,5 @@
 esptool==5.0.1
 QPUIQ
 pyserial
-pexpect
 PySide6_Essentials
 pyinstaller

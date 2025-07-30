@@ -2,7 +2,6 @@ import glob
 import os
 import time
 import sys
-import pexpect
 import shutil
 import re
 from common import *
@@ -45,18 +44,11 @@ class DFUBackend(Backend):
         ]
         # print(" ".join(cmd))
         # main.state.logs.append(" ".join(cmd))
-        child = spawn(cmd, timeout=300)
         ports = []
-        while True:
-            try:
-                child.expect(['\n'])
-                line = child.before
-                line = line.decode("utf-8", errors="ignore")
-                line = strip(line)
-                if line.startswith("Found"):
-                    ports.append(line.split(": ", 1)[1])
-            except pexpect.EOF:
-                break
+        for line in spawn(cmd):
+            line = strip(line)
+            if line.startswith("Found"):
+                ports.append(line.split(": ", 1)[1])
         return ports
 
     @staticmethod
@@ -142,24 +134,16 @@ class DFUBackend(Backend):
 
             print(" ".join(cmd))
             main.state.logs.append(" ".join(cmd))
-            child = spawn(cmd, timeout=300)
-            child.logfile_read = sys.stdout.buffer
-            while True:
-                try:
-                    child.expect(['\r', '\n'])
-                    line = child.before
-                    line = line.decode("utf-8", errors="ignore")
-                    line = strip(line)
-                    if not line:
-                        continue
-                    m = re.search(r'\] *(\d+)%', line)
-                    if m:
-                        main.state.progress = int(m.group(1))
-                        has_progress = True
-                        continue
-                    main.state.logs.append(line)
-                except pexpect.EOF:
-                    break
+            for line in spawn(cmd):
+                line = strip(line)
+                if not line:
+                    continue
+                m = re.search(r'\] *(\d+)%', line)
+                if m:
+                    main.state.progress = int(m.group(1))
+                    has_progress = True
+                    continue
+                main.state.logs.append(line)
 
         if has_progress:
             main.ok = True

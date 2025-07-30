@@ -23,10 +23,6 @@ Engineers deliver firmware and a manifest.json file for all the complicated sett
     * macOS (tested with M2)
     * Windows x64
 
-
-## Known Issue
-* BlackMagicProbe/OpenOCD backends don't have progressive output on Windows due to the limit of pexpect
-
 ## Screenshots
 ![Flashing](screenshots/flashing.png)
 

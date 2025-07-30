@@ -3,15 +3,44 @@ import os
 import re
 import glob
 import serial
-import pexpect
+import subprocess
+import json
 
-if sys.platform.startswith('win'):
-    from pexpect.popen_spawn import PopenSpawn
-    spawn = PopenSpawn
-else:
-    def spawn(cmd, timeout=30):
-        return pexpect.spawn(cmd[0], cmd[1:], timeout=timeout)
+def spawn(command, **kwargs):
+    process = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        text=True,
+        bufsize=1,
+        **kwargs
+    )
 
+    # Read output line by line and print simultaneously
+    for line in process.stdout:
+        # print(line, end='')  # Print to console
+        sys.stdout.flush()   # Force immediate output
+        line = line.rstrip("\r\n")
+        print(line)
+        yield line
+
+    # Wait for process to complete and get return code
+    return_code = process.wait()
+
+    return return_code
+
+def spawn_gdb(command):
+    for line in spawn(command):
+        if line:
+            if line[0] in "@~&":
+                yield json.loads(line[1:]).rstrip("\r\n")
+            elif line[0] in "=":
+                continue
+            else:
+                yield line
+        else:
+            yield None
 
 def strip(s):
     s = re.sub(r'\x1b\[[0-9;]*m', '', s)

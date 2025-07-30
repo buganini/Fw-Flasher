@@ -1,5 +1,4 @@
 import os
-import pexpect
 import shutil
 
 from common import *
@@ -51,22 +50,12 @@ class OpenOCDBackend(Backend):
             "-c", "interface",
         ]
         print(" ".join(cmd))
-        child = spawn(cmd, timeout=300)
-        child.logfile_read = sys.stdout.buffer
-
         serial_ident = "CMSIS-DAP: Serial# ="
+        for line in spawn(cmd):
+            line = strip(line)
 
-        while True:
-            try:
-                child.expect('\n')
-                line = child.before
-                line = line.decode("utf-8", errors="ignore")
-                line = strip(line)
-
-                if serial_ident in line:
-                    ports.append(line.split(serial_ident)[1].strip())
-            except pexpect.EOF:
-                break
+            if serial_ident in line:
+                ports.append(line.split(serial_ident)[1].strip())
 
         return ports
 
@@ -90,21 +79,13 @@ class OpenOCDBackend(Backend):
         ])
         print(" ".join(cmd))
         main.state.logs.append(" ".join(cmd))
-        child = spawn(cmd, timeout=300)
-        child.logfile_read = sys.stdout.buffer
-
-        while True:
-            try:
-                child.expect('\n')
-                line = child.before
-                if hasattr(line, "decode"):
-                    line = line.decode("utf-8", errors="ignore")
-                line = strip(line)
-                main.state.logs.append(line)
-                if "Programming Finished" in line:
-                    main.ok = True
-            except pexpect.EOF:
-                break
+        for line in spawn(cmd):
+            if hasattr(line, "decode"):
+                line = line.decode("utf-8", errors="ignore")
+            line = strip(line)
+            main.state.logs.append(line)
+            if "Programming Finished" in line:
+                main.ok = True
 
     @staticmethod
     def get_interface(profile):
@@ -175,17 +156,9 @@ class OpenOCDBackend(Backend):
             cmd.extend(["-c", "exit"])
             print(" ".join(cmd))
             main.state.logs.append(" ".join(cmd))
-            child = spawn(cmd, timeout=300)
-            child.logfile_read = sys.stdout.buffer
-            while True:
-                try:
-                    child.expect('\n')
-                    line = child.before
-                    line = line.decode("utf-8", errors="ignore")
-                    line = strip(line)
-                    main.state.logs.append(line)
-                except pexpect.EOF:
-                    break
+            for line in spawn(cmd):
+                line = strip(line)
+                main.state.logs.append(line)
 
         if main.state.erase_flash:
             OpenOCDBackend.erase_flash(main, port, profile)
@@ -213,20 +186,11 @@ class OpenOCDBackend(Backend):
         ])
         print(" ".join(cmd))
         main.state.logs.append(" ".join(cmd))
-        child = spawn(cmd, timeout=300)
-        child.logfile_read = sys.stdout.buffer
-
-        while True:
-            try:
-                child.expect('\n')
-                line = child.before
-                line = line.decode("utf-8", errors="ignore")
-                line = strip(line)
-                main.state.logs.append(line)
-                if "Programming Finished" in line:
-                    main.ok = True
-            except pexpect.EOF:
-                break
+        for line in spawn(cmd):
+            line = strip(line)
+            main.state.logs.append(line)
+            if "Programming Finished" in line:
+                main.ok = True
 
         if profile.get("after"):
             cmd = [
@@ -243,14 +207,6 @@ class OpenOCDBackend(Backend):
             cmd.extend(["-c", "exit"])
             print(" ".join(cmd))
             main.state.logs.append(" ".join(cmd))
-            child = spawn(cmd, timeout=300)
-            child.logfile_read = sys.stdout.buffer
-            while True:
-                try:
-                    child.expect('\n')
-                    line = child.before
-                    line = line.decode("utf-8", errors="ignore")
-                    line = strip(line)
-                    main.state.logs.append(line)
-                except pexpect.EOF:
-                    break
+            for line in spawn(cmd):
+                line = strip(line)
+                main.state.logs.append(line)

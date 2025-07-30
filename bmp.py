@@ -2,7 +2,6 @@ import glob
 import os
 import time
 import sys
-import pexpect
 import shutil
 import re
 from common import *
@@ -84,7 +83,7 @@ class BMPBackend(Backend):
             main.state.logs.append(f"TPWR power cycle")
             cmd = [
                 arm_none_eabi_gdb,
-                "-ex", "set pagination off",
+                "--interpreter=mi",
                 "-ex", f"target extended-remote {port}",
                 "-ex", "monitor tpwr disable",
                 "-ex", "monitor tpwr enable",
@@ -92,22 +91,15 @@ class BMPBackend(Backend):
             ]
             print(" ".join(cmd))
             main.state.logs.append(" ".join(cmd))
-            child = spawn(cmd, timeout=300)
-            while True:
-                try:
-                    child.expect(['\n'])
-                    line = child.before
-                    line = line.decode("utf-8", errors="ignore")
-                    line = strip(line)
-                    main.state.logs.append(line)
-                except pexpect.EOF:
-                    break
+            for line in spawn_gdb(cmd):
+                line = strip(line)
+                main.state.logs.append(line)
             time.sleep(0.5)
 
         file = file.replace("\\", "\\\\").replace(" ", "\\ ")
         cmd = [
             arm_none_eabi_gdb,
-            "-ex", "set pagination off",
+            "--interpreter=mi",
             "-ex", f"target extended-remote {port}",
             "-ex", "monitor tpwr enable",
         ]
@@ -124,16 +116,8 @@ class BMPBackend(Backend):
         ])
         print(" ".join(cmd))
         main.state.logs.append(" ".join(cmd))
-        child = spawn(cmd, timeout=300)
-        child.logfile_read = sys.stdout.buffer
-        while True:
-            try:
-                child.expect('\n')
-                line = child.before
-                line = line.decode("utf-8", errors="ignore")
-                line = strip(line)
-                if "Transfer rate" in line:
-                    main.ok = True
-                main.state.logs.append(line)
-            except pexpect.EOF:
-                break
+        for line in spawn_gdb(cmd):
+            line = strip(line)
+            if "Detaching from program" in line:
+                main.ok = True
+            main.state.logs.append(line)
