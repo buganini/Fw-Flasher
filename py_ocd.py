@@ -1,8 +1,6 @@
 import os
 import re
 from common import *
-import pyocd
-from pyocd.core.session import Session
 from pyocd.core.helpers import ConnectHelper
 from pyocd.flash.file_programmer import FileProgrammer
 from pyocd.target.family.target_nRF91 import ModemUpdater
