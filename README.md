@@ -17,6 +17,8 @@ Engineers deliver firmware and a manifest.json file for all the complicated sett
     * dfu-util
         * type=dfu
         * Still needs zadig to fix driver issue on windows
+    * PyOCD
+        * type=pyocd
 
 * Cross-Platform
     * Linux
