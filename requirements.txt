@@ -1,4 +1,5 @@
 esptool==5.0.1
+pyocd
 QPUIQ
 pyserial
 PySide6_Essentials

@@ -14,6 +14,7 @@ from bmp import BMPBackend
 from dfu import DFUBackend
 from esp import ESPBackend
 from openocd import OpenOCDBackend
+from py_ocd import PyOCDBackend
 
 
 class UI(Application):
@@ -125,6 +126,8 @@ class UI(Application):
             return OpenOCDBackend
         elif profile.get("type", "") == "dfu":
             return DFUBackend
+        elif profile.get("type", "") == "pyocd":
+            return PyOCDBackend
         else:
             print("Unsupported chip type: %s" % profile.get("type"))
             return None
