@@ -73,6 +73,7 @@
         "description": "NRF91 modem/app firmware programming with PyOCD",
         "type": "pyocd",
         "target": "nrf91",
+        "frequency": 4000000,
         "commands": [
             ["nrf91-update-modem-fw", "mfw_nrf91x1_2.0.2.zip"],
             ["load", "nrf9151_slm.hex"]

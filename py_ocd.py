@@ -50,7 +50,19 @@ class PyOCDBackend(Backend):
 
         main.ok = True
 
-        with ConnectHelper.session_with_chosen_probe(target_override=target) as session:
+        options = {}
+        frequency = profile.get('frequency', None)
+        if frequency:
+            options['frequency'] = frequency
+            main.state.logs.append(f"Frequency: {frequency}")
+
+        kwargs = {}
+        if options:
+            kwargs["options"] = options
+
+        main.state.logs.append(f"Starting PyOCD")
+
+        with ConnectHelper.session_with_chosen_probe(target_override=target, **kwargs) as session:
             target = session.board.target
 
             if main.state.erase_flash:
