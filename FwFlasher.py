@@ -31,6 +31,8 @@ class UI(Application):
         self.state.worker = None
         self.state.erase_flash = False
         self.state.ports = []
+
+        self.manifest_dir = None
         self.backend = None
 
     def content(self):
@@ -44,7 +46,7 @@ class UI(Application):
                             for profile in self.state.profiles.keys():
                                 ComboBoxItem(profile)
                     else:
-                        Button("Load").click(lambda e: self.load())
+                        Button("Load Manifest").click(lambda e: self.load_manifest())
 
                     if self.backend and self.backend.list_ports:
                         Label("Port")
@@ -60,6 +62,9 @@ class UI(Application):
                         Button("Flash (Enter)").click(lambda e: self.flash())
 
                     Spacer()
+
+                    if self.state.profiles:
+                        Button("Load Manifest").click(lambda e: self.load_manifest())
 
                 with HBox():
                     Label("Description:")
@@ -98,9 +103,10 @@ class UI(Application):
             self.state.port = "Auto"
             self.state.erase_flash = self.state.profiles[self.state.profile].get("erase-flash", False)
 
-    def load(self):
-        file = OpenFile("Open Manifest", types="Manifest JSON (*.json)|.*json")
+    def load_manifest(self):
+        file = OpenFile("Open Manifest", types="Manifest JSON (*.json)|.*json", dir=self.manifest_dir)
         if file:
+            self.manifest_dir = os.path.dirname(file)
             self.loadFile(file)
 
     def loadFile(self, file):
