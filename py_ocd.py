@@ -7,7 +7,7 @@ from pyocd.target.family.target_nRF91 import ModemUpdater
 
 class PyOCDBackend(Backend):
     show_progress = True
-    erase_flash = None
+    erase_flash = True
 
     @staticmethod
     def list_ports(main, profile):
@@ -29,9 +29,7 @@ class PyOCDBackend(Backend):
             if len(cmd) == 0:
                 main.state.logs.append("Error: command is empty")
                 return
-            if cmd[0] == "mass_erase":
-                pass
-            elif cmd[0] in ("load", "nrf91-update-modem-fw"):
+            if cmd[0] in ("load", "nrf91-update-modem-fw"):
                 write_cmds_num += 1
                 if len(cmd) == 1:
                     main.state.logs.append("Error: command is missing file")
@@ -55,42 +53,42 @@ class PyOCDBackend(Backend):
         with ConnectHelper.session_with_chosen_probe(target_override=target) as session:
             target = session.board.target
 
+            if main.state.erase_flash:
+                main.state.logs.append("Erasing flash...")
+                target.mass_erase()
+                main.state.logs.append("Flash erased")
+
             try:
                 write_cmds_done = 0
                 for cmd in commands:
                     main.state.progress = int(write_cmds_done / write_cmds_num * 100)
 
-                    if cmd[0] == "mass_erase":
-                        main.state.logs.append("Erasing flash...")
-                        target.mass_erase()
-                        main.state.logs.append("Flash erased")
+                    file = cmd[1]
+                    if os.path.isabs(file):
+                        pass
                     else:
-                        file = cmd[1]
-                        if os.path.isabs(file):
-                            pass
-                        else:
-                            file = os.path.join(main.state.root, file)
+                        file = os.path.join(main.state.root, file)
 
-                        if cmd[0] == "load":
-                            main.state.logs.append(f"Loading {file}...")
-                            def progress(progress):
-                                print(f"load progress: {progress}")
-                                main.state.progress = int(write_cmds_done / write_cmds_num * 100) + (progress*100)/write_cmds_num + 1
-                                main.wait()
+                    if cmd[0] == "load":
+                        main.state.logs.append(f"Loading {file}...")
+                        def progress(progress):
+                            print(f"load progress: {progress}")
+                            main.state.progress = int(write_cmds_done / write_cmds_num * 100) + (progress*100)/write_cmds_num + 1
+                            main.wait()
 
-                            programmer = FileProgrammer(session, progress=progress)
-                            programmer.program(file)
-                            write_cmds_done += 1
+                        programmer = FileProgrammer(session, progress=progress)
+                        programmer.program(file)
+                        write_cmds_done += 1
 
-                        elif cmd[0] == "nrf91-update-modem-fw":
-                            main.state.logs.append(f"Updating modem firmware from {file}...")
-                            def progress(progress):
-                                print(f"nrf91-update-modem-fw progress: {progress}")
-                                main.state.progress = int(write_cmds_done / write_cmds_num * 100) + (progress*100)/write_cmds_num + 1
-                                main.wait()
-                            update = ModemUpdater(session, progress=progress)
-                            update.program_and_verify(file)
-                            write_cmds_done += 1
+                    elif cmd[0] == "nrf91-update-modem-fw":
+                        main.state.logs.append(f"nrf91-update-modem-fw {file}...")
+                        def progress(progress):
+                            print(f"nrf91-update-modem-fw progress: {progress}")
+                            main.state.progress = int(write_cmds_done / write_cmds_num * 100) + (progress*100)/write_cmds_num + 1
+                            main.wait()
+                        update = ModemUpdater(session, progress=progress)
+                        update.program_and_verify(file)
+                        write_cmds_done += 1
 
                 main.state.progress = 100
             except Exception as e:
