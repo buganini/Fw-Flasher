@@ -11,7 +11,8 @@ class PyOCDBackend(Backend):
 
     @staticmethod
     def list_ports(main, profile):
-        return []
+        allProbes = ConnectHelper.get_all_connected_probes(blocking=True)
+        return [p.unique_id for p in allProbes]
 
     @staticmethod
     def flash(main, port, profile):
@@ -59,8 +60,10 @@ class PyOCDBackend(Backend):
         kwargs = {}
         if options:
             kwargs["options"] = options
+        if port != "Auto":
+            kwargs["unique_id"] = port
 
-        main.state.logs.append(f"Starting PyOCD")
+        main.state.logs.append(f"Starting PyOCD with options: {kwargs}")
 
         with ConnectHelper.session_with_chosen_probe(target_override=target, **kwargs) as session:
             target = session.board.target
