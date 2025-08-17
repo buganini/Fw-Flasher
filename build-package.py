@@ -10,6 +10,12 @@ from bmp import find_arm_none_eabi_gdb
 from openocd import find_openocd
 from dfu import find_dfu_util
 
+
+# macOS
+## brew install create-dmg
+## xcrun notarytool store-credentials notarytool-creds  --apple-id your@apple.id --team-id "XXXXXXXXXX" --password "xxxx-xxxx-xxxx-xxxx"
+
+
 create_dmg = False
 codesign_identity = None
 
