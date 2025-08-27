@@ -11,7 +11,7 @@ class PyOCDBackend(Backend):
 
     @staticmethod
     def list_ports(main, profile):
-        allProbes = ConnectHelper.get_all_connected_probes(blocking=True)
+        allProbes = ConnectHelper.get_all_connected_probes(blocking=False)
         return [p.unique_id for p in allProbes]
 
     @staticmethod
