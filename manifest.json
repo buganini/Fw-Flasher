@@ -1,6 +1,6 @@
 {
-    "ESP Controller": {
-        "description": "ESP controller",
+    "[ESPTool] ESP32C3 Blink": {
+        "description": "[EspTool] ESP32C3 Blink",
         "type": "esp32c3",
         "erase-flash": false,
         "baudrate": 460800,
@@ -8,41 +8,40 @@
         "after": "hard_reset",
         "no-stub": false,
         "flash-mode": "dio",
-        "flash-size": "4MB",
+        "flash-size": "2MB",
         "flash-freq": "80m",
         "write-flash": [
-            ["0x0", "smart_switch_a/bootloader.bin"],
-            ["0x8000", "smart_switch_a/partition-table.bin"],
-            ["0x10c000", "smart_switch_a/ota_data_initial.bin"],
-            ["0x110000", "smart_switch_a/app.bin"]
+            ["0x0", "blink/bootloader.bin"],
+            ["0x8000", "blink/partition-table.bin"],
+            ["0x10000", "blink/blink.bin"]
         ]
     },
-    "NRF52 Controller (BlackMagicProbe)": {
-        "description": "NRF52 Controller with BlackMagicProbe",
+    "[BlackMagicProbe] NRF52 Controller": {
+        "description": "[BlackMagicProbe] NRF52 Controller",
         "type": "bmp",
         "attach": 1,
         "tpwr": true,
         "connect_rst": true,
         "load": "nrf52_controller/merged.hex"
     },
-    "NRF52 Controller (OpenOCD/CMSIS-DAP)": {
-        "description": "NRF52 Controller with OpenOCD/CMSIS-DAP",
+    "[OpenOCD/CMSIS-DAP] NRF52 Controller": {
+        "description": "[OpenOCD/CMSIS-DAP] NRF52 Controller",
         "type": "openocd",
         "interface": "cmsis-dap.cfg",
         "transport": "swd",
         "target": "nrf52.cfg",
         "program": "nrf52_controller/merged.hex"
     },
-    "NRF52 Controller (OpenOCD/JLink)": {
-        "description": "NRF52 Controller with OpenOCD/JLink",
+    "[OpenOCD/JLink] NRF52 Controller": {
+        "description": "[OpenOCD/JLink] NRF52 Controller",
         "type": "openocd",
         "interface": "jlink.cfg",
         "transport": "swd",
         "target": "nrf52.cfg",
         "program": "nrf52_controller/merged.hex"
     },
-    "STM32 Controller (OpenOCD/ST-Link)": {
-        "description": "STM32 Controller with OpenOCD/ST-Link",
+    "[OpenOCD/ST-Link] STM32 Controller": {
+        "description": "[OpenOCD/ST-Link] STM32 Controller",
         "type": "openocd",
         "interface": "stlink.cfg",
         "target": "stm32f1x.cfg",
@@ -58,8 +57,8 @@
         "program": "firmware.bin",
         "program-offset": "0x08000000"
     },
-    "STM32 Controller (DFU)": {
-        "description": "NRF52 Controller with DFU",
+    "[DFU] BlackMagicProbe": {
+        "description": "[DFU] BlackMagicProbe",
         "type": "dfu",
         "downloads": [
             {
@@ -69,8 +68,8 @@
             }
         ]
     },
-    "NRF91 (PyOCD)": {
-        "description": "NRF91 modem/app firmware programming with PyOCD",
+    "[PyOCD] NRF91 modem/app firmware": {
+        "description": "[PyOCD] NRF91 modem/app firmware",
         "type": "pyocd",
         "target": "nrf91",
         "frequency": 4000000,
