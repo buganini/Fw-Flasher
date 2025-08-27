@@ -23,17 +23,51 @@ class UI(Application):
         self.state = state = State()
         self.state.port = ""
         self.state.profile = ""
-        self.state.profiles = []
+        self.state.profiles = {}
         self.state.progress = 0
         self.state.root = ""
         self.state.logs = []
         self.state.mac = ""
         self.state.worker = None
+        self.state.batch_old_ports = set()
+        self.state.batch_working_ports = set()
+        self.state.batch_idle_ports = set()
+        self.state.batch_worker = OrderedDict()
+        self.state.batch_flash = False
+        self.state.batch_flashing = False
         self.state.erase_flash = False
         self.state.ports = []
 
         self.manifest_dir = None
         self.backend = None
+
+        Thread(target=self.ports_watcher, daemon=True).start()
+
+    def ports_watcher(self):
+        while True:
+            try:
+                backend = self.getBackend(self.state.profiles.get(self.state.profile))
+                if backend and backend.list_ports:
+                    ports = backend.list_ports(self, self.state.profiles[self.state.profile])
+                else:
+                    ports = []
+                self.state.ports = ports
+                if self.state.batch_flashing:
+                    current_ports = set(ports)
+                    removed_ports = (self.state.batch_old_ports | self.state.batch_working_ports | self.state.batch_idle_ports) - current_ports
+
+                    new_ports = current_ports - self.state.batch_old_ports - self.state.batch_working_ports - self.state.batch_idle_ports
+                    print("Removed ports: ", removed_ports)
+                    print("New ports: ", new_ports)
+                    self.state.batch_working_ports |= new_ports
+
+                    self.state.batch_old_ports -= removed_ports
+                    self.state.batch_working_ports -= removed_ports
+                    self.state.batch_idle_ports -= removed_ports
+            except:
+                import traceback
+                traceback.print_exc()
+            time.sleep(0.5)
 
     def content(self):
         title = f"Firmware Flasher v{VERSION} (esptool {esptool.__version__}, PUI {PUI.__version__} {PUI_BACKEND})"
@@ -58,12 +92,16 @@ class UI(Application):
                     if self.backend and self.backend.erase_flash:
                         Checkbox("Erase Flash", self.state("erase_flash"))
 
-                    if self.state.profile and self.state.worker is None:
-                        Button("Flash (Enter)").click(lambda e: self.flash())
+                    if self.state.profile:
+                        if self.state.worker is None and not self.state.batch_flashing:
+                            Button("Flash (Enter)").click(lambda e: self.flash())
+                            # Button("Batch Flash").click(lambda e: self.batch_start())
+                        elif self.state.batch_flashing:
+                            Button("Stop").click(lambda e: self.batch_stop())
 
                     Spacer()
 
-                    if self.state.profiles:
+                    if self.state.profiles and self.state.worker is None and not self.state.batch_flashing:
                         Button("Load Manifest").click(lambda e: self.load_manifest())
 
                 with HBox():
@@ -80,11 +118,14 @@ class UI(Application):
                         Label("MAC:")
                         TextField(self.state("mac"))
 
-                if self.backend and self.backend.show_progress:
-                    ProgressBar(progress=self.state.progress, maximum=100)
-
-                with Scroll().layout(weight=1).scrollY(Scroll.END):
-                    Text("\n".join(self.state.logs))
+                if self.state.batch_flashing:
+                    with Scroll().layout(weight=1).scrollY():
+                        Spacer()
+                else:
+                    if self.backend and self.backend.show_progress:
+                        ProgressBar(progress=self.state.progress, maximum=100)
+                    with Scroll().layout(weight=1).scrollY(Scroll.END):
+                        Text("\n".join(self.state.logs))
 
     def keypress(self, e):
         if e.text == "\r":
@@ -96,10 +137,6 @@ class UI(Application):
             self.state.logs = []
             backend.precheck(self)
             self.backend = backend
-            if backend.list_ports:
-                self.state.ports = backend.list_ports(self, self.state.profiles[self.state.profile])
-            else:
-                self.state.ports = []
             self.state.port = "Auto"
             self.state.erase_flash = self.state.profiles[self.state.profile].get("erase-flash", False)
 
@@ -124,6 +161,8 @@ class UI(Application):
                 self.changeProfile(None)
 
     def getBackend(self, profile):
+        if not profile:
+            return None
         if profile.get("type", "").startswith("esp"):
             return ESPBackend
         elif profile.get("type", "") == "bmp":
@@ -138,7 +177,6 @@ class UI(Application):
             print("Unsupported chip type: %s" % profile.get("type"))
             return None
 
-
     def flash(self):
         self.state.progress = 0
         profile = self.state.profiles.get(self.state.profile)
@@ -150,6 +188,17 @@ class UI(Application):
         backend = self.getBackend(profile)
         if backend:
             Thread(target=self.thread_watcher, args=[backend.flash, port, profile], daemon=True).start()
+
+    def batch_start(self):
+        self.state.batch_old_ports = set(self.state.ports)
+        self.state.batch_new_ports = set()
+        self.state.batch_working_ports = set()
+        self.state.batch_worker = OrderedDict()
+        self.state.batch_flash = True
+        self.state.batch_flashing = True
+
+    def batch_stop(self):
+        self.state.batch_flash = False
 
     def thread_watcher(self, func, port, profile):
         self.ok = False
