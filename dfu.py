@@ -134,13 +134,23 @@ class DFUBackend(Backend):
 
             print(" ".join(cmd))
             main.state.logs.append(" ".join(cmd))
+            has_erase_phase = False
             for line in spawn(cmd):
                 line = strip(line)
                 if not line:
                     continue
-                m = re.search(r'\] *(\d+)%', line)
+                m = re.search(r'\s*(\S*)\s*\[[ =]*\] *(\d+)%', line)
                 if m:
-                    main.state.progress = int(m.group(1))
+                    phase = m.group(1)
+                    progress = int(m.group(2))
+                    if phase == "Erase":
+                        has_erase_phase = True
+                        progress *= 0.5
+                    elif phase == "Download":
+                        if has_erase_phase:
+                            progress *= 0.5
+                            progress += 50
+                    main.state.progress = progress
                     has_progress = True
                     continue
                 main.state.logs.append(line)
