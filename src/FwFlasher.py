@@ -67,7 +67,7 @@ class UI(Application):
             except:
                 import traceback
                 traceback.print_exc()
-            time.sleep(0.5)
+            time.sleep(1)
 
     def content(self):
         title = f"Firmware Flasher v{VERSION} (esptool {esptool.__version__}, PUI {PUI.__version__} {PUI_BACKEND})"
