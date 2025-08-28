@@ -10,7 +10,7 @@ def spawn(command, **kwargs):
     process = subprocess.Popen(
         command,
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
         universal_newlines=True,
         text=True,
         bufsize=1,

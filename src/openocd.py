@@ -50,12 +50,14 @@ class OpenOCDBackend(Backend):
             "-c", "interface",
         ]
         print(" ".join(cmd))
-        serial_ident = "CMSIS-DAP: Serial# ="
+        serial_idents = ["CMSIS-DAP: Serial# =", "Device: Serial number ="]
         for line in spawn(cmd):
             line = strip(line)
 
-            if serial_ident in line:
-                ports.append(line.split(serial_ident)[1].strip())
+            for ident in serial_idents:
+                if ident in line:
+                    ports.append(line.split(ident)[1].strip())
+                    break
 
         return ports
 
