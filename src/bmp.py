@@ -117,6 +117,7 @@ class BMPBackend(Backend):
             "-ex", "quit",
         ])
         print(" ".join(cmd))
+        main.ok = True
         main.state.logs.append(" ".join(cmd))
         for line in spawn_gdbmi(cmd):
             line = strip(line)
@@ -125,9 +126,10 @@ class BMPBackend(Backend):
                 if "total-size" in kv and "total-sent" in kv:
                     main.state.progress = int(int(kv["total-sent"]) / int(kv["total-size"]) * 100)
                 main.wait()
-            if "Detaching from program" in line:
-                main.state.progress = 100
-                main.ok = True
+            if "Error" in line:
+                main.ok = False
             main.state.logs.append(line)
-        if not main.ok:
+        if main.ok:
+            main.state.progress = 100
+        else:
             main.state.progress = 0
