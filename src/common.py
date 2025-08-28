@@ -58,6 +58,7 @@ def resource_path(relative_path):
 class Backend():
     show_mac = False
     show_progress = False
+    erase_flash = False
 
     @staticmethod
     def list_ports(main, profile):
@@ -91,8 +92,3 @@ class Backend():
     @staticmethod
     def flash(main, port, profile):
         pass
-
-    @staticmethod
-    def erase_flash(main, port, profile):
-        pass
-

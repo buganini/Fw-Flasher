@@ -25,6 +25,8 @@ def find_openocd():
 openocd = find_openocd()
 
 class OpenOCDBackend(Backend):
+    show_progress = False
+
     @staticmethod
     def precheck(main):
         if openocd:
@@ -165,6 +167,7 @@ class OpenOCDBackend(Backend):
         if main.state.erase_flash:
             OpenOCDBackend.erase_flash(main, port, profile)
 
+        main.ok = False
         cmd = [
             openocd[0],
             "-f", interface,
