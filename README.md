@@ -13,7 +13,9 @@ Engineers deliver firmware and a manifest.json file for all the complicated sett
         * type=bmp
     * OpenOCD
         * type=openocd
-        * Currently, only CMSIS-DAP supports device enumeration
+        * Interfaces with device enumeration support:
+            * cmsis-dap
+            * jlink
     * dfu-util
         * type=dfu
         * Still needs zadig to fix driver issue on windows
