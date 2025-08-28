@@ -6,7 +6,7 @@ import serial
 import subprocess
 import json
 
-def spawn(command, **kwargs):
+def spawn(command, print_output=True, **kwargs):
     process = subprocess.Popen(
         command,
         stdout=subprocess.PIPE,
@@ -21,7 +21,8 @@ def spawn(command, **kwargs):
     for line in process.stdout:
         sys.stdout.flush()   # Force immediate output
         line = line.rstrip("\r\n")
-        print(line)
+        if print_output:
+            print(line)
         yield line
 
     # Wait for process to complete and get return code

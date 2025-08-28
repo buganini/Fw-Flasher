@@ -49,9 +49,9 @@ class OpenOCDBackend(Backend):
             "-f", interface,
             "-c", "interface",
         ]
-        print(" ".join(cmd))
+        # print(" ".join(cmd))
         serial_idents = ["CMSIS-DAP: Serial# =", "Device: Serial number ="]
-        for line in spawn(cmd):
+        for line in spawn(cmd, print_output=False):
             line = strip(line)
 
             for ident in serial_idents:
