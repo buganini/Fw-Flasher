@@ -94,10 +94,9 @@ class UI(Application):
                             for port in self.state.ports:
                                 ComboBoxItem(port)
 
-                    if self.backend and self.backend.erase_flash:
-                        Checkbox("Erase Flash", self.state("erase_flash"))
-
                     if self.state.profile:
+                        if self.backend and self.backend.erase_flash:
+                            Checkbox("Erase Flash", self.state("erase_flash"))
                         if self.state.worker is None and not self.state.batch_flashing:
                             Button("Flash (Enter)").click(lambda e: self.flash())
                             # Button("Batch Flash").click(lambda e: self.batch_start())

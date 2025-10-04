@@ -8,6 +8,7 @@ from common import *
 class ESPBackend(Backend):
     show_mac = True
     show_progress = True
+    erase_flash = True
 
     @staticmethod
     def flash(main, port, profile):
