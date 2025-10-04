@@ -46,24 +46,29 @@ class UI(Application):
     def ports_watcher(self):
         while True:
             try:
-                backend = self.getBackend(self.state.profiles.get(self.state.profile))
-                if backend and backend.list_ports:
-                    ports = backend.list_ports(self, self.state.profiles[self.state.profile])
-                else:
-                    ports = []
-                self.state.ports = ports
-                if self.state.batch_flashing:
-                    current_ports = set(ports)
-                    removed_ports = (self.state.batch_old_ports | self.state.batch_working_ports | self.state.batch_idle_ports) - current_ports
+                profile = self.state.profiles.get(self.state.profile)
+                if profile:
+                    backend = self.getBackend(profile)
+                    if backend and backend.list_ports:
+                        ports = backend.list_ports(self, self.state.profiles[self.state.profile])
+                    else:
+                        ports = []
+                    self.state.ports = ports
+                    if self.state.batch_flashing:
+                        current_ports = set(ports)
+                        removed_ports = (self.state.batch_old_ports | self.state.batch_working_ports | self.state.batch_idle_ports) - current_ports
 
-                    new_ports = current_ports - self.state.batch_old_ports - self.state.batch_working_ports - self.state.batch_idle_ports
-                    print("Removed ports: ", removed_ports)
-                    print("New ports: ", new_ports)
-                    self.state.batch_working_ports |= new_ports
+                        new_ports = current_ports - self.state.batch_old_ports - self.state.batch_working_ports - self.state.batch_idle_ports
+                        print("Removed ports: ", removed_ports)
+                        print("New ports: ", new_ports)
 
-                    self.state.batch_old_ports -= removed_ports
-                    self.state.batch_working_ports -= removed_ports
-                    self.state.batch_idle_ports -= removed_ports
+                        for p in new_ports:
+                            self.state.batch_working_ports.add(p)
+                            Thread(target=self.batch_worker, args=[profile, backend, p], daemon=True).start()
+
+                        self.state.batch_old_ports -= removed_ports
+                        self.state.batch_working_ports -= removed_ports
+                        self.state.batch_idle_ports -= removed_ports
             except:
                 import traceback
                 traceback.print_exc()
