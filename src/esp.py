@@ -2,6 +2,7 @@ import os
 from threading import Thread
 
 import esptool
+import espefuse
 
 from common import *
 
@@ -67,6 +68,29 @@ class ESPBackend(Backend):
         if not port:
             main.state.logs.append("Error: Port not found")
             return
+
+        efuse = profile.get("efuse", [])
+        if efuse:
+            cmd = []
+            cmd.extend(["--port", port])
+            cmd.append("--do-not-confirm")
+            cmd.append("burn-efuse")
+            cmd.extend(efuse)
+            main.state.logs.append(f"EFUSE: {efuse}")
+            print(cmd)
+            main.state.logs.append("espefuse.py " + " ".join(cmd))
+            main.ok = True
+            try:
+                espefuse.main(cmd)
+                print("espefuse.main() done")
+            except Exception as e:
+                import traceback
+                main.ok = False
+                main.state.progress = 0
+                main.state.logs.append(f"Error: {e}")
+                main.state.logs.append(f"Error: {traceback.format_exc()}")
+                traceback.print_exc()
+                return
 
         cmd = []
         cmd.extend(["--port", port])

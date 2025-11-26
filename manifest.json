@@ -14,7 +14,8 @@
             ["0x0", "blink/bootloader.bin"],
             ["0x8000", "blink/partition-table.bin"],
             ["0x10000", "blink/blink.bin"]
-        ]
+        ],
+        "efuse": ["DIS_PAD_JTAG"]
     },
     "[BlackMagicProbe] NRF52 Controller": {
         "description": "[BlackMagicProbe] NRF52 Controller",
