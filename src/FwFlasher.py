@@ -6,6 +6,10 @@ import json
 from collections import OrderedDict
 from PUI.PySide6 import *
 import PUI
+import tempfile
+import atexit
+import shutil
+import esptool
 
 VERSION = "0.8"
 
@@ -16,10 +20,12 @@ from esp import ESPBackend
 from openocd import OpenOCDBackend
 from py_ocd import PyOCDBackend
 
-
 class UI(Application):
     def __init__(self):
         super().__init__(icon=resource_path("icon.ico"))
+        self.temp_dir = tempfile.mkdtemp(prefix="fw_flasher_")
+        atexit.register(self.cleanup)
+
         self.state = state = State()
         self.state.port = ""
         self.state.profile = ""
@@ -42,6 +48,10 @@ class UI(Application):
         self.backend = None
 
         Thread(target=self.ports_watcher, daemon=True).start()
+
+    def cleanup(self):
+        if os.path.exists(self.temp_dir):
+            shutil.rmtree(self.temp_dir)
 
     def ports_watcher(self):
         while True:
@@ -95,8 +105,9 @@ class UI(Application):
                                 ComboBoxItem(port)
 
                     if self.state.profile:
-                        if self.backend and self.backend.erase_flash:
-                            Checkbox("Erase Flash", self.state("erase_flash"))
+                        if self.backend:
+                            if self.backend.erase_flash and self.state.profiles[self.state.profile].get("erase-flash") != "disabled":
+                                Checkbox("Erase Flash", self.state("erase_flash"))
                         if self.state.worker is None and not self.state.batch_flashing:
                             Button("Flash (Enter)").click(lambda e: self.flash())
                             # Button("Batch Flash").click(lambda e: self.batch_start())
@@ -142,12 +153,11 @@ class UI(Application):
             backend.precheck(self)
             self.backend = backend
             self.state.port = "Auto"
-            self.state.erase_flash = self.state.profiles[self.state.profile].get("erase-flash", False)
+        self.state.erase_flash = self.state.profiles[self.state.profile].get("erase-flash", False)
 
     def load_manifest(self):
         file = OpenFile("Open Manifest", types="Manifest JSON (*.json)|.*json", dir=self.manifest_dir)
         if file:
-            self.manifest_dir = os.path.dirname(file)
             self.loadFile(file)
 
     def loadFile(self, file):
@@ -156,6 +166,7 @@ class UI(Application):
             self.state.profiles = json.load(f, object_pairs_hook=OrderedDict)
             use_bmp = False
             if self.state.profiles:
+                self.manifest_dir = os.path.dirname(file)
                 for name, profile in self.state.profiles.items():
                     backend = self.getBackend(profile)
                     if not backend:
@@ -224,7 +235,10 @@ if __name__ == "__main__":
     ui = UI()
 
     if len(sys.argv) > 1:
-        ui.loadFile(sys.argv[1])
+        if sys.argv[1] == "esptool":
+            esptool.main(sys.argv[2:])
+        else:
+            ui.loadFile(sys.argv[1])
     elif os.path.exists("manifest/manifest.json"):
         ui.loadFile("manifest/manifest.json")
 

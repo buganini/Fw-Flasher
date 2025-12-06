@@ -9,6 +9,7 @@ Engineers deliver firmware and a manifest.json file for all the complicated sett
 * Multiple backends
     * esptool
         * type=esp*
+        * External enablement of flash encryption (development mode) + secure boot tested with: esp32c3
     * Black Magic Probe
         * type=bmp
     * OpenOCD
