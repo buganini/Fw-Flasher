@@ -6,6 +6,12 @@ import serial
 import subprocess
 import json
 
+try:
+    base_path = sys._MEIPASS
+    ARGV0 = [sys.argv[0]]
+except Exception:
+    ARGV0 = [sys.executable, sys.argv[0]]
+
 def spawn(command, print_output=True, **kwargs):
     process = subprocess.Popen(
         command,

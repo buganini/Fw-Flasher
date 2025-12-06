@@ -197,7 +197,7 @@ class ESPBackend(Backend):
         main.state.logs.append(f"Auto encryption: {auto_flash_encryption}")
         main.state.logs.append(f"Manual encryption: {manual_flash_encryption}")
 
-        cmd = []
+        cmd = [*ARGV0, "esptool"]
         cmd.extend(["--port", port])
         cmd.extend(["--chip", profile.get("type")])
         cmd.extend(["-b", profile.get("baudrate", "460800")])
@@ -215,6 +215,8 @@ class ESPBackend(Backend):
         cmd.extend(["--flash-size", profile.get("flash-size", "4MB")])
         if auto_flash_encryption:
             cmd.extend(["--encrypt", "--force"])
+        progress_map = {}
+        flash_parts_num = 0
         for offset, file in profile.get("write-flash", []):
             if os.path.isabs(file):
                 pass
@@ -244,18 +246,35 @@ class ESPBackend(Backend):
                     traceback.print_exc()
                     return
                 cmd.extend([offset, encrypted_file])
+                progress_map[int(offset, 0)] = flash_parts_num
+                flash_parts_num += 1
             else:
                 if auto_flash_encryption and int(offset, 0) < 0x8000 and not secure_boot_overwrite_bootloader:
                     continue
                 cmd.extend([offset, file])
+                progress_map[int(offset, 0)] = flash_parts_num
+                flash_parts_num += 1
 
         cmd = [str(x) for x in cmd]
         print(" ".join(f"\"{x}\"" for x in cmd))
         main.state.logs.append("esptool " + " ".join(cmd))
         main.ok = True
+
+        flash_parts_progress = 0
         try:
-            esptool.main(cmd)
-            print("esptool.main() done")
+            for line in spawn(cmd):
+                m = re.search(r"Writing at (0x[0-9a-fA-F]+)\s*\[.*?\].*?%\s*(\d+)/(\d+)\s*bytes", line)
+                if m:
+                    offset = int(m.group(1), 0)
+                    if offset in progress_map:
+                        flash_parts_progress = progress_map[offset]
+                    a = int(m.group(2), 0)
+                    b = int(m.group(3), 0)
+                    main.state.progress = int(flash_parts_progress / flash_parts_num * 100) + int(a / b * 100) / flash_parts_num
+                m = re.search(r"MAC:\s*([0-9a-fA-F:]+)", line)
+                if m:
+                    main.state.mac = m.group(1)
+
             main.state.progress = 100
         except Exception as e:
             import traceback
