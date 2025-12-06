@@ -236,7 +236,7 @@ class ESPBackend(Backend):
                         "--output", encrypted_file,
                         file
                     ])
-                    main.state.logs.append(f"espsecure encrypt-flash-data {file} done")
+                    # main.state.logs.append(f"espsecure encrypt-flash-data {file} done")
                 except Exception as e:
                     import traceback
                     main.ok = False
@@ -257,7 +257,7 @@ class ESPBackend(Backend):
 
         cmd = [str(x) for x in cmd]
         print(" ".join(f"\"{x}\"" for x in cmd))
-        main.state.logs.append("esptool " + " ".join(cmd))
+        # main.state.logs.append("esptool " + " ".join(cmd))
         main.ok = True
 
         flash_parts_progress = 0
@@ -274,8 +274,14 @@ class ESPBackend(Backend):
                 m = re.search(r"MAC:\s*([0-9a-fA-F:]+)", line)
                 if m:
                     main.state.mac = m.group(1)
+                if "Error" in line:
+                    main.ok = False
+                    main.state.progress = 0
+                    main.state.logs.append(line)
+                    return
 
-            main.state.progress = 100
+            if main.ok:
+                main.state.progress = 100
         except Exception as e:
             import traceback
             main.ok = False
