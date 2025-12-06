@@ -35,9 +35,9 @@ class UI(Application):
         self.state.logs = []
         self.state.mac = ""
         self.state.worker = None
-        self.state.batch_old_ports = set()
-        self.state.batch_working_ports = set()
-        self.state.batch_idle_ports = set()
+        self.state.old_ports = set()
+        self.state.working_ports = set()
+        self.state.idle_ports = set()
         self.state.batch_worker = OrderedDict()
         self.state.batch_flash = False
         self.state.batch_flashing = False
@@ -66,19 +66,19 @@ class UI(Application):
                     self.state.ports = ports
                     if self.state.batch_flashing:
                         current_ports = set(ports)
-                        removed_ports = (self.state.batch_old_ports | self.state.batch_working_ports | self.state.batch_idle_ports) - current_ports
+                        removed_ports = (self.state.old_ports | self.state.working_ports | self.state.idle_ports) - current_ports
 
-                        new_ports = current_ports - self.state.batch_old_ports - self.state.batch_working_ports - self.state.batch_idle_ports
+                        new_ports = current_ports - self.state.old_ports - self.state.working_ports - self.state.idle_ports
                         print("Removed ports: ", removed_ports)
                         print("New ports: ", new_ports)
 
                         for p in new_ports:
-                            self.state.batch_working_ports.add(p)
+                            self.state.working_ports.add(p)
                             Thread(target=self.batch_worker, args=[profile, backend, p], daemon=True).start()
 
-                        self.state.batch_old_ports -= removed_ports
-                        self.state.batch_working_ports -= removed_ports
-                        self.state.batch_idle_ports -= removed_ports
+                        self.state.old_ports -= removed_ports
+                        self.state.working_ports -= removed_ports
+                        self.state.idle_ports -= removed_ports
             except:
                 import traceback
                 traceback.print_exc()
@@ -202,12 +202,12 @@ class UI(Application):
 
         backend = self.getBackend(profile)
         if backend:
-            Thread(target=self.thread_watcher, args=[backend.flash, port, profile], daemon=True).start()
+            Thread(target=self.thread_watcher, args=[backend.flash, port, profile, backend], daemon=True).start()
 
     def batch_start(self):
-        self.state.batch_old_ports = set(self.state.ports)
+        self.state.old_ports = set(self.state.ports)
         self.state.batch_new_ports = set()
-        self.state.batch_working_ports = set()
+        self.state.working_ports = set()
         self.state.batch_worker = OrderedDict()
         self.state.batch_flash = True
         self.state.batch_flashing = True
@@ -215,7 +215,12 @@ class UI(Application):
     def batch_stop(self):
         self.state.batch_flash = False
 
-    def thread_watcher(self, func, port, profile):
+    def batch_worker(self, profile, backend, port):
+        pass
+
+    def thread_watcher(self, func, port, profile, backend):
+        port = backend.determine_port(self, profile, port)
+        self.state.working_ports.add(port)
         self.ok = False
 
         worker = Thread(target=func, args=[self, port, profile], daemon=True)
@@ -228,6 +233,7 @@ class UI(Application):
         else:
             self.state.logs.append("Error")
         self.state.worker = None
+        self.state.working_ports.remove(port)
 
 
 
@@ -237,6 +243,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         if sys.argv[1] == "esptool":
             esptool.main(sys.argv[2:])
+            sys.exit(0)
         else:
             ui.loadFile(sys.argv[1])
     elif os.path.exists("manifest/manifest.json"):

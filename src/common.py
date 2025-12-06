@@ -61,8 +61,13 @@ class Backend():
     erase_flash = False
 
     @staticmethod
+    def determine_port(main, profile, port):
+        return port
+
+    @staticmethod
     def list_ports(main, profile):
         result = []
+        working_ports = main.state.working_ports
 
         if sys.platform.startswith('win'):
             from serial.tools import list_ports
@@ -77,6 +82,9 @@ class Backend():
             raise EnvironmentError('Unsupported platform')
 
         for port in ports:
+            if port in working_ports:
+                result.append(port)
+                continue
             try:
                 s = serial.Serial(port)
                 s.close()

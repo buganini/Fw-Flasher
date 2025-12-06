@@ -106,6 +106,16 @@ class OpenOCDBackend(Backend):
         return target
 
     @staticmethod
+    def determine_port(main, profile, port):
+        if port == "Auto":
+            ports = OpenOCDBackend.list_ports(main, profile)
+            if ports:
+                port = ports[0]
+            else:
+                port = None
+        return port
+
+    @staticmethod
     def flash(main, port, profile):
         if not openocd:
             return
@@ -122,14 +132,6 @@ class OpenOCDBackend(Backend):
             return
 
         file = file.replace("\\", "/").replace("\"", "\\\"")
-
-        if port == "Auto":
-            ports = OpenOCDBackend.list_ports(main, profile)
-            if ports:
-                port = ports[0]
-            else:
-                port = None
-
 
         main.ok = True
         interface = OpenOCDBackend.get_interface(profile)

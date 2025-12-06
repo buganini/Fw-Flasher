@@ -5,6 +5,7 @@ import esptool
 import espefuse
 import espsecure
 import uuid
+import gc
 
 from common import *
 
@@ -22,58 +23,14 @@ class ESPBackend(Backend):
         t.join()
 
     @staticmethod
-    def flash(main, port, profile):
-        from esptool.logger import log, TemplateLogger
-
-        if hasattr(log, "set_logger"):
-            class CustomLogger(TemplateLogger):
-                def print(self, message="", *args, **kwargs):
-                    print(f"{message}", *args, **kwargs)
-                    ui_changed = False
-                    if not message.startswith("Writing at"):
-                        main.state.logs.append(message)
-                        ui_changed = True
-                    if message.startswith("MAC: "):
-                        main.state.mac = message.split("MAC: ")[1].strip()
-                        ui_changed = True
-                    if ui_changed:
-                        main.wait()
-
-                def note(self, message):
-                    self.print(f"NOTE: {message}")
-
-                def warning(self, message):
-                    self.print(f"WARNING: {message}")
-
-                def error(self, message):
-                    self.print(message, file=sys.stderr)
-
-                def stage(self, finish=False):
-                    # Collapsible stages not needed in this example
-                    pass
-
-                def progress_bar(
-                    self,
-                    cur_iter,
-                    total_iters,
-                    prefix = "",
-                    suffix = "",
-                    bar_length: int = 30,
-                ):
-                    percent = int(100 * (cur_iter / float(total_iters)))
-                    main.state.progress = percent
-                    main.wait()
-
-                def set_verbosity(self, verbosity):
-                    # Set verbosity level not needed in this example
-                    pass
-
-            log.set_logger(CustomLogger())
-
-        main.state.logs = []
-
+    def determine_port(main, profile, port):
         if port == "Auto":
             port = ESPBackend.list_ports(main, profile)[0]
+        return port
+
+    @staticmethod
+    def flash(main, port, profile):
+        main.state.logs = []
 
         if not port:
             main.state.logs.append("Error: Port not found")
@@ -113,6 +70,7 @@ class ESPBackend(Backend):
         initial_secure_boot_enabled = secinfo["parsed_flags"]["SECURE_BOOT_EN"]
         secinfo = None
         loader = None
+        gc.collect()
 
         main.state.logs.append("Security status:")
         main.state.logs.append(f"Flash encryption: {initial_flash_encryption_enabled}")
@@ -173,6 +131,7 @@ class ESPBackend(Backend):
             except:
                 pass
             loader = None
+            gc.collect()
             print("esptool erase-flash done")
 
             cmd = [
