@@ -23,8 +23,9 @@ Engineers deliver firmware and a manifest.json file for all the complicated sett
     * PyOCD
         * type=pyocd
 
-* Batch Flashing (Experimental)
-    * Tested with esptool backend
+* Batch Flashing
+    * Based on port detection, newly detected ports will be flashed automatically
+    * Tested with esptool backend only
 
 * Cross-Platform
     * Linux
