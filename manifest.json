@@ -43,7 +43,7 @@
             "secure_boot_overwrite_bootloader": false,
             "secure_boot_digest": "credentials/secure_boot_digest.bin",
             "secure_boot_digest_block": "BLOCK_KEY1",
-            "secure_boot_digest_purpose": "SECURE_BOOT_DIGEST0",
+            "secure_boot_digest_purpose": "SECURE_BOOT_DIGEST0"
         },
         "efuse": [
             ["DIS_DOWNLOAD_ICACHE", "1"],
