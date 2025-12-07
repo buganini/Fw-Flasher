@@ -6,9 +6,9 @@ import sys
 import itertools
 import glob
 import shutil
-from bmp import find_arm_none_eabi_gdb
-from openocd import find_openocd
-from dfu import find_dfu_util
+from src.bmp import find_arm_none_eabi_gdb
+from src.openocd import find_openocd
+from src.dfu import find_dfu_util
 
 
 # macOS
@@ -61,7 +61,7 @@ else:
 print(pyinstaller_args)
 
 PyInstaller.__main__.run([
-    'src/FwFlasher.py',
+    'src/__main__.py',
     "--onedir",
     "--noconfirm",
     "--windowed",

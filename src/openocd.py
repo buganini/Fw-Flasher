@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from common import *
+from .common import *
 
 def find_openocd():
     try:

@@ -4,7 +4,7 @@ import time
 import sys
 import shutil
 import re
-from common import *
+from .common import *
 
 def find_arm_none_eabi_gdb():
     try:

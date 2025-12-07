@@ -1,6 +1,6 @@
 import os
 import re
-from common import *
+from .common import *
 from pyocd.core.helpers import ConnectHelper
 from pyocd.flash.file_programmer import FileProgrammer
 from pyocd.target.family.target_nRF91 import ModemUpdater

@@ -13,12 +13,12 @@ import esptool
 
 VERSION = "0.9"
 
-from common import *
-from bmp import BMPBackend
-from dfu import DFUBackend
-from esp import ESPBackend
-from openocd import OpenOCDBackend
-from py_ocd import PyOCDBackend
+from .common import *
+from .bmp import BMPBackend
+from .dfu import DFUBackend
+from .esp import ESPBackend
+from .openocd import OpenOCDBackend
+from .py_ocd import PyOCDBackend
 
 class TaskContext(StateObject):
     def __init__(self, main):
@@ -286,20 +286,3 @@ class UI(Application):
         self.state.worker = None
         self.state.idle_ports.add(port)
         self.state.working_ports.remove(port)
-
-
-
-if __name__ == "__main__":
-    ui = UI()
-
-    if len(sys.argv) > 1:
-        if sys.argv[1] == "esptool":
-            esptool.main(sys.argv[2:])
-            sys.exit(0)
-        else:
-            ui.loadFile(sys.argv[1])
-    elif os.path.exists("manifest/manifest.json"):
-        ui.loadFile("manifest/manifest.json")
-
-    ui.run()
-
