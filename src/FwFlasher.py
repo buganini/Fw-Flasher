@@ -210,7 +210,12 @@ class UI(Application):
     def loadFile(self, file):
         self.context.logs = []
         with open(file, "r") as f:
-            self.state.profiles = json.load(f, object_pairs_hook=OrderedDict)
+            try:
+                self.state.profiles = json.load(f, object_pairs_hook=OrderedDict)
+            except Exception as e:
+                import traceback
+                self.context.logs.append(f"Error: {traceback.format_exc()}")
+                return
             use_bmp = False
             if self.state.profiles:
                 self.manifest_dir = os.path.dirname(file)
