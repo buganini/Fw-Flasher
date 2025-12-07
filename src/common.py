@@ -67,13 +67,13 @@ class Backend():
     erase_flash = False
 
     @staticmethod
-    def determine_port(main, profile, port):
+    def determine_port(context, profile, port):
         return port
 
     @staticmethod
-    def list_ports(main, profile):
+    def list_ports(context, profile):
         result = []
-        working_ports = main.state.working_ports
+        working_ports = context.main.state.working_ports
 
         if sys.platform.startswith('win'):
             from serial.tools import list_ports
@@ -100,9 +100,9 @@ class Backend():
         return result
 
     @staticmethod
-    def precheck(main):
+    def precheck(context):
         pass
 
     @staticmethod
-    def flash(main, port, profile):
+    def flash(context, port, profile):
         pass

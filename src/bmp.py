@@ -45,44 +45,44 @@ class BMPBackend(Backend):
         return ret
 
     @staticmethod
-    def precheck(main):
+    def precheck(context):
         if arm_none_eabi_gdb:
             print(f"Found {arm_none_eabi_gdb}")
         else:
-            main.state.logs.append("Error: arm-none-eabi-gdb not found")
+            context.logs.append("Error: arm-none-eabi-gdb not found")
 
     @staticmethod
-    def flash(main, port, profile):
+    def flash(context, port, profile):
         if not arm_none_eabi_gdb:
             return
 
-        main.state.logs = []
-        main.state.progress = 0
+        context.logs = []
+        context.progress = 0
 
         file = profile.get('load', '')
         if os.path.isabs(file):
             pass
         else:
-            file = os.path.join(main.state.root, file)
+            file = os.path.join(context.main.state.root, file)
         if not os.path.exists(file):
-            main.state.logs.append(f"Error: File not found: {file}")
+            context.logs.append(f"Error: File not found: {file}")
             return
 
         if port == "Auto":
-            ports = BMPBackend.list_ports(main, profile)
+            ports = BMPBackend.list_ports(context, profile)
             if ports:
                 port = ports[0]
             else:
                 port = None
 
         if not port:
-            main.state.logs.append("Error: BMP port not found")
+            context.logs.append("Error: BMP port not found")
             return
 
-        main.ok = False
+        context.ok = False
 
         if profile.get("tpwr", True):
-            main.state.logs.append(f"TPWR power cycle")
+            context.logs.append(f"TPWR power cycle")
             cmd = [
                 arm_none_eabi_gdb,
                 "--interpreter=mi",
@@ -92,10 +92,10 @@ class BMPBackend(Backend):
                 "-ex", "quit",
             ]
             print(" ".join(cmd))
-            main.state.logs.append(" ".join(cmd))
+            context.logs.append(" ".join(cmd))
             for line in spawn_gdbmi(cmd):
                 line = strip(line)
-                main.state.logs.append(line)
+                context.logs.append(line)
             time.sleep(0.5)
 
         file = file.replace("\\", "\\\\").replace(" ", "\\ ")
@@ -117,19 +117,19 @@ class BMPBackend(Backend):
             "-ex", "quit",
         ])
         print(" ".join(cmd))
-        main.ok = True
-        main.state.logs.append(" ".join(cmd))
+        context.ok = True
+        context.logs.append(" ".join(cmd))
         for line in spawn_gdbmi(cmd):
             line = strip(line)
             if line.startswith("+download,"):
                 kv = {k:v[1:-1] for k,v in [kv.split("=") for kv in line[11:-1].split(",")]}
                 if "total-size" in kv and "total-sent" in kv:
-                    main.state.progress = int(int(kv["total-sent"]) / int(kv["total-size"]) * 100)
+                    context.progress = int(int(kv["total-sent"]) / int(kv["total-size"]) * 100)
                 main.wait()
             if "Error" in line:
-                main.ok = False
-            main.state.logs.append(line)
-        if main.ok:
-            main.state.progress = 100
+                context.ok = False
+            context.logs.append(line)
+        if context.ok:
+            context.progress = 100
         else:
-            main.state.progress = 0
+            context.progress = 0

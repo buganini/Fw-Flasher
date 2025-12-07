@@ -23,17 +23,17 @@ class ESPBackend(Backend):
         t.join()
 
     @staticmethod
-    def determine_port(main, profile, port):
+    def determine_port(context, profile, port):
         if port == "Auto":
-            port = ESPBackend.list_ports(main, profile)[0]
+            port = ESPBackend.list_ports(context, profile)[0]
         return port
 
     @staticmethod
-    def flash(main, port, profile):
-        main.state.logs = []
+    def flash(context, port, profile):
+        context.logs = []
 
         if not port:
-            main.state.logs.append("Error: Port not found")
+            context.logs.append("Error: Port not found")
             return
 
         security = profile.get("security", {})
@@ -56,12 +56,12 @@ class ESPBackend(Backend):
         if any(secure_boot_settings):
             if secure_boot_digest:
                 if not os.path.isabs(secure_boot_digest):
-                    secure_boot_digest = os.path.join(main.manifest_dir, secure_boot_digest)
+                    secure_boot_digest = os.path.join(context.main.manifest_dir, secure_boot_digest)
                 if not os.path.exists(secure_boot_digest):
-                    main.state.logs.append(f"Error: Secure boot digest file not found: {secure_boot_digest}")
+                    context.logs.append(f"Error: Secure boot digest file not found: {secure_boot_digest}")
                     return
             else:
-                main.state.logs.append(f"Error: Secure boot digest is not set")
+                context.logs.append(f"Error: Secure boot digest is not set")
                 return
 
         loader = esptool.cmds.detect_chip(port)
@@ -72,43 +72,43 @@ class ESPBackend(Backend):
         loader = None
         gc.collect()
 
-        main.state.logs.append("Security status:")
-        main.state.logs.append(f"Flash encryption: {initial_flash_encryption_enabled}")
-        main.state.logs.append(f"Secure Boot: {initial_secure_boot_enabled}")
+        context.logs.append("Security status:")
+        context.logs.append(f"Flash encryption: {initial_flash_encryption_enabled}")
+        context.logs.append(f"Secure Boot: {initial_secure_boot_enabled}")
 
         if any(flash_encryption_settings):
             if flash_encryption_key:
                 if not os.path.isabs(flash_encryption_key):
-                    flash_encryption_key = os.path.join(main.manifest_dir, flash_encryption_key)
+                    flash_encryption_key = os.path.join(context.main.manifest_dir, flash_encryption_key)
                 if not os.path.exists(flash_encryption_key):
-                    main.state.logs.append(f"Error: Secure boot digest file not found: {flash_encryption_key}")
+                    context.logs.append(f"Error: Secure boot digest file not found: {flash_encryption_key}")
                     return
             elif flash_encryption_key == "":
                 if not initial_flash_encryption_enabled:
-                    flash_encryption_key = os.path.join(main.temp_dir, uuid.uuid4().hex)
+                    flash_encryption_key = os.path.join(context.main.temp_dir, uuid.uuid4().hex)
                     cmd = [
                         "generate-flash-encryption-key",
                         flash_encryption_key
                     ]
-                    main.state.logs.append("espsecure " + " ".join(cmd))
+                    context.logs.append("espsecure " + " ".join(cmd))
                     flash_encryption_key_generated = True
                     try:
                         ESPBackend.exec_in_thread(espsecure.main, cmd)
-                        main.state.logs.append("espsecure generate-flash-encryption-key done")
+                        context.logs.append("espsecure generate-flash-encryption-key done")
                     except Exception as e:
                         import traceback
-                        main.ok = False
-                        main.state.progress = 0
-                        main.state.logs.append(f"Error: {e}")
-                        main.state.logs.append(f"Error: {traceback.format_exc()}")
+                        context.ok = False
+                        context.progress = 0
+                        context.logs.append(f"Error: {e}")
+                        context.logs.append(f"Error: {traceback.format_exc()}")
                         traceback.print_exc()
                         return
             else:
-                main.state.logs.append(f"Error: Flash encryption key is not set")
+                context.logs.append(f"Error: Flash encryption key is not set")
                 return
 
         if profile.get("type") == "esp32c2":
-            main.state.logs.append(f"Error: eFuse combination for ESP32-C2 is not implemented")
+            context.logs.append(f"Error: eFuse combination for ESP32-C2 is not implemented")
             return
 
         # refresh
@@ -139,17 +139,17 @@ class ESPBackend(Backend):
                 "--do-not-confirm",
                 "burn-key", flash_encryption_key_block, flash_encryption_key, flash_encryption_key_purpose
             ]
-            main.state.logs.append("espefuse " + " ".join(cmd))
-            main.ok = True
+            context.logs.append("espefuse " + " ".join(cmd))
+            context.ok = True
             try:
                 ESPBackend.exec_in_thread(espefuse.main, cmd)
-                main.state.logs.append("espefuse burn-key for flash_encryption_key done")
+                context.logs.append("espefuse burn-key for flash_encryption_key done")
             except Exception as e:
                 import traceback
-                main.ok = False
-                main.state.progress = 0
-                main.state.logs.append(f"Error: {e}")
-                main.state.logs.append(f"Error: {traceback.format_exc()}")
+                context.ok = False
+                context.progress = 0
+                context.logs.append(f"Error: {e}")
+                context.logs.append(f"Error: {traceback.format_exc()}")
                 traceback.print_exc()
                 return
 
@@ -159,17 +159,17 @@ class ESPBackend(Backend):
                 "burn-efuse",
                 "SPI_BOOT_CRYPT_CNT", "7"
             ]
-            main.state.logs.append("espefuse " + " ".join(cmd))
-            main.ok = True
+            context.logs.append("espefuse " + " ".join(cmd))
+            context.ok = True
             try:
                 ESPBackend.exec_in_thread(espefuse.main, cmd)
-                main.state.logs.append("espefuse burn-efuse for flash_encryption_key done")
+                context.logs.append("espefuse burn-efuse for flash_encryption_key done")
             except Exception as e:
                 import traceback
-                main.ok = False
-                main.state.progress = 0
-                main.state.logs.append(f"Error: {e}")
-                main.state.logs.append(f"Error: {traceback.format_exc()}")
+                context.ok = False
+                context.progress = 0
+                context.logs.append(f"Error: {e}")
+                context.logs.append(f"Error: {traceback.format_exc()}")
                 traceback.print_exc()
 
         if all(secure_boot_settings):
@@ -179,23 +179,23 @@ class ESPBackend(Backend):
                     "--do-not-confirm",
                     "burn-key", secure_boot_digest_block, secure_boot_digest, secure_boot_digest_purpose
                 ]
-                main.state.logs.append("espefuse " + " ".join(cmd))
-                main.ok = True
+                context.logs.append("espefuse " + " ".join(cmd))
+                context.ok = True
                 try:
                     ESPBackend.exec_in_thread(espefuse.main, cmd)
-                    main.state.logs.append("espefuse burn-key for secure_boot_digest done")
+                    context.logs.append("espefuse burn-key for secure_boot_digest done")
                 except Exception as e:
                     import traceback
-                    main.ok = False
-                    main.state.progress = 0
-                    main.state.logs.append(f"Error: {e}")
-                    main.state.logs.append(f"Error: {traceback.format_exc()}")
+                    context.ok = False
+                    context.progress = 0
+                    context.logs.append(f"Error: {e}")
+                    context.logs.append(f"Error: {traceback.format_exc()}")
                     traceback.print_exc()
                     return
 
-        main.state.logs.append("Download encryption status:")
-        main.state.logs.append(f"Auto encryption: {auto_flash_encryption}")
-        main.state.logs.append(f"Manual encryption: {manual_flash_encryption}")
+        context.logs.append("Download encryption status:")
+        context.logs.append(f"Auto encryption: {auto_flash_encryption}")
+        context.logs.append(f"Manual encryption: {manual_flash_encryption}")
 
         cmd = [*ARGV0, "esptool"]
         cmd.extend(["--port", port])
@@ -206,7 +206,7 @@ class ESPBackend(Backend):
         if profile.get("no-stub", False) or auto_flash_encryption:
             cmd.extend(["--no-stub"])
         cmd.extend(["write-flash"])
-        if main.state.erase_flash and profile.get("erase-flash") != "disabled" and not flash_erased and not (initial_secure_boot_enabled and not secure_boot_overwrite_bootloader):
+        if context.main.state.erase_flash and profile.get("erase-flash") != "disabled" and not flash_erased and not (initial_secure_boot_enabled and not secure_boot_overwrite_bootloader):
             cmd.extend(["--erase-all"])
             if auto_flash_encryption:
                 cmd.extend(["--force"])
@@ -221,12 +221,12 @@ class ESPBackend(Backend):
             if os.path.isabs(file):
                 pass
             else:
-                file = os.path.join(main.state.root, file)
+                file = os.path.join(context.main.state.root, file)
             if not os.path.exists(file):
-                main.state.logs.append(f"Error: File not found: {file}")
+                context.logs.append(f"Error: File not found: {file}")
                 return
             if manual_flash_encryption:
-                encrypted_file = os.path.join(main.temp_dir, uuid.uuid4().hex)
+                encrypted_file = os.path.join(context.main.temp_dir, uuid.uuid4().hex)
                 try:
                     ESPBackend.exec_in_thread(espsecure.main, [
                         "encrypt-flash-data",
@@ -236,13 +236,13 @@ class ESPBackend(Backend):
                         "--output", encrypted_file,
                         file
                     ])
-                    # main.state.logs.append(f"espsecure encrypt-flash-data {file} done")
+                    # context.logs.append(f"espsecure encrypt-flash-data {file} done")
                 except Exception as e:
                     import traceback
-                    main.ok = False
-                    main.state.progress = 0
-                    main.state.logs.append(f"Error: {e}")
-                    main.state.logs.append(f"Error: {traceback.format_exc()}")
+                    context.ok = False
+                    context.progress = 0
+                    context.logs.append(f"Error: {e}")
+                    context.logs.append(f"Error: {traceback.format_exc()}")
                     traceback.print_exc()
                     return
                 cmd.extend([offset, encrypted_file])
@@ -257,8 +257,8 @@ class ESPBackend(Backend):
 
         cmd = [str(x) for x in cmd]
         print(" ".join(f"\"{x}\"" for x in cmd))
-        # main.state.logs.append("esptool " + " ".join(cmd))
-        main.ok = True
+        # context.logs.append("esptool " + " ".join(cmd))
+        context.ok = True
 
         flash_parts_progress = 0
         try:
@@ -270,24 +270,24 @@ class ESPBackend(Backend):
                         flash_parts_progress = progress_map[offset]
                     a = int(m.group(2), 0)
                     b = int(m.group(3), 0)
-                    main.state.progress = int(flash_parts_progress / flash_parts_num * 100) + int(a / b * 100) / flash_parts_num
+                    context.progress = int(flash_parts_progress / flash_parts_num * 100) + int(a / b * 100) / flash_parts_num
                 m = re.search(r"MAC:\s*([0-9a-fA-F:]+)", line)
                 if m:
-                    main.state.mac = m.group(1)
+                    context.mac = m.group(1)
                 if "Error" in line:
-                    main.ok = False
-                    main.state.progress = 0
-                    main.state.logs.append(line)
+                    context.ok = False
+                    context.progress = 0
+                    context.logs.append(line)
                     return
 
-            if main.ok:
-                main.state.progress = 100
+            if context.ok:
+                context.progress = 100
         except Exception as e:
             import traceback
-            main.ok = False
-            main.state.progress = 0
-            main.state.logs.append(f"Error: {e}")
-            main.state.logs.append(f"Error: {traceback.format_exc()}")
+            context.ok = False
+            context.progress = 0
+            context.logs.append(f"Error: {e}")
+            context.logs.append(f"Error: {traceback.format_exc()}")
             traceback.print_exc()
 
         if flash_encryption_key_generated:
@@ -303,18 +303,18 @@ class ESPBackend(Backend):
             for key, value in efuse:
                 cmd.append(key)
                 cmd.append(value)
-            main.state.logs.append(f"EFUSE: {efuse}")
-            main.state.logs.append("espefuse " + " ".join(cmd))
-            main.ok = True
+            context.logs.append(f"EFUSE: {efuse}")
+            context.logs.append("espefuse " + " ".join(cmd))
+            context.ok = True
             try:
                 ESPBackend.exec_in_thread(espefuse.main, cmd)
-                main.state.logs.append("espefuse burn-efuse done")
+                context.logs.append("espefuse burn-efuse done")
             except Exception as e:
                 import traceback
-                main.ok = False
-                main.state.progress = 0
-                main.state.logs.append(f"Error: {e}")
-                main.state.logs.append(f"Error: {traceback.format_exc()}")
+                context.ok = False
+                context.progress = 0
+                context.logs.append(f"Error: {e}")
+                context.logs.append(f"Error: {traceback.format_exc()}")
                 traceback.print_exc()
 
         write_protect_efuse = profile.get("write-protect-efuse", [])
@@ -325,5 +325,5 @@ class ESPBackend(Backend):
             cmd.append("write-protect-efuse")
             for key in write_protect_efuse:
                 cmd.append(key)
-            main.state.logs.append("espefuse " + " ".join(cmd))
+            context.logs.append("espefuse " + " ".join(cmd))
             ESPBackend.exec_in_thread(espefuse.main, cmd)

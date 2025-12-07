@@ -38,12 +38,12 @@ class DFUBackend(Backend):
     erase_flash = None
 
     @staticmethod
-    def list_ports(main, profile):
+    def list_ports(context, profile):
         cmd = [
             dfu_util, "-l"
         ]
         # print(" ".join(cmd))
-        # main.state.logs.append(" ".join(cmd))
+        # context.logs.append(" ".join(cmd))
         ports = []
         for line in spawn(cmd):
             line = strip(line)
@@ -52,18 +52,18 @@ class DFUBackend(Backend):
         return ports
 
     @staticmethod
-    def precheck(main):
+    def precheck(context):
         if dfu_util:
             print(f"Found {dfu_util}")
         else:
-            main.state.logs.append("Error: dfu_util not found")
+            context.logs.append("Error: dfu_util not found")
 
     @staticmethod
-    def flash(main, port, profile):
+    def flash(context, port, profile):
         if not dfu_util:
             return
 
-        main.state.logs = []
+        context.logs = []
 
         files = []
         downloads = profile.get('downloads', [])
@@ -74,23 +74,23 @@ class DFUBackend(Backend):
             if os.path.isabs(file):
                 pass
             else:
-                file = os.path.join(main.state.root, file)
+                file = os.path.join(context.main.state.root, file)
             if not os.path.exists(file):
-                main.state.logs.append(f"Error: File not found: {file}")
+                context.logs.append(f"Error: File not found: {file}")
                 return
 
         if port == "Auto":
-            ports = DFUBackend.list_ports(main, profile)
+            ports = DFUBackend.list_ports(context, profile)
             if ports:
                 port = ports[0]
             else:
                 port = None
 
         if not port:
-            main.state.logs.append("Error: DFU port not found")
+            context.logs.append("Error: DFU port not found")
             return
 
-        main.ok = False
+        context.ok = False
 
         device_path = re.search(r'path="([^"]+)"', port)
         print("device_path", device_path)
@@ -110,7 +110,7 @@ class DFUBackend(Backend):
             if os.path.isabs(file):
                 pass
             else:
-                file = os.path.join(main.state.root, file)
+                file = os.path.join(context.main.state.root, file)
 
             args.extend(["--download", file])
 
@@ -133,7 +133,7 @@ class DFUBackend(Backend):
             ]
 
             print(" ".join(cmd))
-            main.state.logs.append(" ".join(cmd))
+            context.logs.append(" ".join(cmd))
             has_erase_phase = False
             for line in spawn(cmd):
                 line = strip(line)
@@ -150,10 +150,10 @@ class DFUBackend(Backend):
                         if has_erase_phase:
                             progress *= 0.5
                             progress += 50
-                    main.state.progress = progress
+                    context.progress = progress
                     has_progress = True
                     continue
-                main.state.logs.append(line)
+                context.logs.append(line)
 
         if has_progress:
-            main.ok = True
+            context.ok = True

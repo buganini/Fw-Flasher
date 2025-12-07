@@ -32,10 +32,10 @@ class OpenOCDBackend(Backend):
         if openocd:
             print(f"Found {openocd}")
         else:
-            main.state.logs.append("Error: OpenOCD not found")
+            context.logs.append("Error: OpenOCD not found")
 
     @staticmethod
-    def list_ports(main, profile):
+    def list_ports(context, profile):
         if not openocd:
             return
 
@@ -64,7 +64,7 @@ class OpenOCDBackend(Backend):
         return ports
 
     @staticmethod
-    def erase_flash(main, port, profile):
+    def erase_flash(context, port, profile):
         cmd = [
             openocd[0],
             "-f", OpenOCDBackend.get_interface(profile),
@@ -82,14 +82,14 @@ class OpenOCDBackend(Backend):
             "-c", "exit",
         ])
         print(" ".join(cmd))
-        main.state.logs.append(" ".join(cmd))
+        context.state.logs.append(" ".join(cmd))
         for line in spawn(cmd):
             if hasattr(line, "decode"):
                 line = line.decode("utf-8", errors="ignore")
             line = strip(line)
-            main.state.logs.append(line)
+            context.state.logs.append(line)
             if "Programming Finished" in line:
-                main.ok = True
+                context.ok = True
 
     @staticmethod
     def get_interface(profile):
@@ -106,9 +106,9 @@ class OpenOCDBackend(Backend):
         return target
 
     @staticmethod
-    def determine_port(main, profile, port):
+    def determine_port(context, profile, port):
         if port == "Auto":
-            ports = OpenOCDBackend.list_ports(main, profile)
+            ports = OpenOCDBackend.list_ports(context, profile)
             if ports:
                 port = ports[0]
             else:
@@ -116,35 +116,35 @@ class OpenOCDBackend(Backend):
         return port
 
     @staticmethod
-    def flash(main, port, profile):
+    def flash(context, port, profile):
         if not openocd:
             return
 
-        main.state.logs = []
+        context.state.logs = []
 
         file = profile.get('program', '')
         if os.path.isabs(file):
             pass
         else:
-            file = os.path.join(main.state.root, file)
+            file = os.path.join(context.main.state.root, file)
         if not os.path.exists(file):
-            main.state.logs.append(f"Error: File not found: {file}")
+            context.logs.append(f"Error: File not found: {file}")
             return
 
         file = file.replace("\\", "/").replace("\"", "\\\"")
 
-        main.ok = True
+        context.ok = True
         interface = OpenOCDBackend.get_interface(profile)
         target = OpenOCDBackend.get_target(profile)
         if not os.path.exists(interface):
-            main.state.logs.append(f"Error: Interface file not found: {interface}")
-            main.ok = False
+            context.logs.append(f"Error: Interface file not found: {interface}")
+            context.ok = False
 
         if not os.path.exists(target):
-            main.state.logs.append(f"Error: Target file not found: {target}")
-            main.ok = False
+            context.logs.append(f"Error: Target file not found: {target}")
+            context.ok = False
 
-        if not main.ok:
+        if not context.ok:
             return
 
         if profile.get("before"):
@@ -161,15 +161,15 @@ class OpenOCDBackend(Backend):
                 cmd.extend(["-c", c])
             cmd.extend(["-c", "exit"])
             print(" ".join(cmd))
-            main.state.logs.append(" ".join(cmd))
+            context.logs.append(" ".join(cmd))
             for line in spawn(cmd):
                 line = strip(line)
-                main.state.logs.append(line)
+                context.logs.append(line)
 
-        if main.state.erase_flash:
+        if context.main.state.erase_flash:
             OpenOCDBackend.erase_flash(main, port, profile)
 
-        main.ok = False
+        context.ok = False
         cmd = [
             openocd[0],
             "-f", interface,
@@ -192,12 +192,12 @@ class OpenOCDBackend(Backend):
             "-c", f"program \"{file}\" verify reset exit{program_offset}",
         ])
         print(" ".join(cmd))
-        main.state.logs.append(" ".join(cmd))
+        context.logs.append(" ".join(cmd))
         for line in spawn(cmd):
             line = strip(line)
-            main.state.logs.append(line)
+            context.logs.append(line)
             if "Programming Finished" in line:
-                main.ok = True
+                context.ok = True
 
         if profile.get("after"):
             cmd = [
@@ -213,7 +213,7 @@ class OpenOCDBackend(Backend):
                 cmd.extend(["-c", c])
             cmd.extend(["-c", "exit"])
             print(" ".join(cmd))
-            main.state.logs.append(" ".join(cmd))
+            context.logs.append(" ".join(cmd))
             for line in spawn(cmd):
                 line = strip(line)
-                main.state.logs.append(line)
+                context.logs.append(line)
