@@ -23,6 +23,9 @@ Engineers deliver firmware and a manifest.json file for all the complicated sett
     * PyOCD
         * type=pyocd
 
+* Batch Flashing (Experimental)
+    * Tested with esptool backend
+
 * Cross-Platform
     * Linux
     * macOS (tested with M2)
