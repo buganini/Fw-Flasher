@@ -24,6 +24,7 @@ class TaskContext(StateObject):
     def __init__(self, main):
         super().__init__()
         self.main = main
+        self.port = None
         self.ok = True
         self.mac = ""
         self.progress = 0
@@ -41,13 +42,14 @@ class UI(Application):
         self.state.profiles = {}
         self.state.root = ""
         self.state.worker = None
-        self.state.old_ports = set()
+        self.state.init_ports = set()
         self.state.working_ports = set()
         self.state.idle_ports = set()
         self.state.batch_worker = OrderedDict()
         self.state.batch_flash = False
         self.state.erase_flash = False
         self.state.ports = []
+        self.state.batch_context = []
 
         self.context = TaskContext(self)
 
@@ -73,17 +75,32 @@ class UI(Application):
                     self.state.ports = ports
                     if self.state.batch_flash:
                         current_ports = set(ports)
-                        removed_ports = (self.state.old_ports | self.state.working_ports | self.state.idle_ports) - current_ports
+                        removed_ports = (self.state.init_ports | self.state.working_ports | self.state.idle_ports) - current_ports
 
-                        new_ports = current_ports - self.state.old_ports - self.state.working_ports - self.state.idle_ports
+                        new_ports = current_ports - self.state.init_ports - self.state.working_ports - self.state.idle_ports
                         print("Removed ports: ", removed_ports)
                         print("New ports: ", new_ports)
+
+                        for p in removed_ports:
+                            try:
+                                self.state.idle_ports.remove(p)
+                            except KeyError:
+                                pass
+                            try:
+                                self.state.working_ports.remove(p)
+                            except KeyError:
+                                pass
+                            try:
+                                self.state.init_ports.remove(p)
+                            except KeyError:
+                                pass
+                        self.state.batch_context = [c for c in self.state.batch_context if c.port not in removed_ports]
 
                         for p in new_ports:
                             self.state.working_ports.add(p)
                             Thread(target=self.batch_worker, args=[profile, backend, p], daemon=True).start()
 
-                        self.state.old_ports -= removed_ports
+                        self.state.init_ports -= removed_ports
                         self.state.working_ports -= removed_ports
                         self.state.idle_ports -= removed_ports
             except:
@@ -135,15 +152,25 @@ class UI(Application):
 
                     Spacer()
 
-                if self.backend and self.backend.show_mac:
-                    with HBox():
-                        Label("MAC:")
-                        TextField(self.context("mac"))
-
+                print("refresh")
                 if self.state.batch_flash:
-                    with Scroll().layout(weight=1).scrollY():
-                        Spacer()
+                    with Scroll().layout(weight=1):
+                        with VBox():
+                            for context in self.state.batch_context:
+                                print(context.port)
+                                with HBox():
+                                    if self.backend and self.backend.show_mac:
+                                        Label("MAC:")
+                                        TextField(context("mac"))
+                                    ProgressBar(progress=context.progress, maximum=100).layout(weight=1)
+                                    Label("" if context.ok else "Error")
+                            Spacer()
                 else:
+                    if self.backend and self.backend.show_mac:
+                        with HBox():
+                            Label("MAC:")
+                            TextField(self.context("mac"))
+
                     if self.backend and self.backend.show_progress:
                         ProgressBar(progress=self.context.progress, maximum=100)
                     with Scroll().layout(weight=1).scrollY(Scroll.END):
@@ -212,7 +239,7 @@ class UI(Application):
             Thread(target=self.thread_watcher, args=[backend.flash, self.context, port, profile, backend], daemon=True).start()
 
     def batch_start(self):
-        self.state.old_ports = set(self.state.ports)
+        self.state.init_ports = set(self.state.ports)
         self.state.batch_new_ports = set()
         self.state.working_ports = set()
         self.state.batch_worker = OrderedDict()
@@ -222,7 +249,12 @@ class UI(Application):
         self.state.batch_flash = False
 
     def batch_worker(self, profile, backend, port):
-        pass
+        context = TaskContext(self)
+        context.port = port
+        self.state.batch_context.append(context)
+        t = Thread(target=self.thread_watcher, args=[backend.flash, context, port, profile, backend], daemon=True)
+        t.start()
+        t.join()
 
     def thread_watcher(self, func, context, port, profile, backend):
         port = backend.determine_port(context, profile, port)
@@ -239,6 +271,7 @@ class UI(Application):
         else:
             self.context.logs.append("Error")
         self.state.worker = None
+        self.state.idle_ports.add(port)
         self.state.working_ports.remove(port)
 
 
