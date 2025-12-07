@@ -61,7 +61,7 @@ else:
 print(pyinstaller_args)
 
 PyInstaller.__main__.run([
-    'src/__main__.py',
+    'FwFlasher.py',
     "--onedir",
     "--noconfirm",
     "--windowed",
