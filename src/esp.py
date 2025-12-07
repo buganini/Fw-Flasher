@@ -217,6 +217,7 @@ class ESPBackend(Backend):
             cmd.extend(["--encrypt", "--force"])
         progress_map = {}
         flash_parts_num = 0
+        file_sizes = []
         for offset, file in profile.get("write-flash", []):
             if os.path.isabs(file):
                 pass
@@ -246,14 +247,18 @@ class ESPBackend(Backend):
                     traceback.print_exc()
                     return
                 cmd.extend([offset, encrypted_file])
+                file_sizes.append(os.path.getsize(encrypted_file))
                 progress_map[int(offset, 0)] = flash_parts_num
                 flash_parts_num += 1
             else:
                 if auto_flash_encryption and int(offset, 0) < 0x8000 and not secure_boot_overwrite_bootloader:
                     continue
                 cmd.extend([offset, file])
+                file_sizes.append(os.path.getsize(file))
                 progress_map[int(offset, 0)] = flash_parts_num
                 flash_parts_num += 1
+
+        total_size = sum(file_sizes)
 
         cmd = [str(x) for x in cmd]
         print(" ".join(f"\"{x}\"" for x in cmd))
@@ -270,7 +275,7 @@ class ESPBackend(Backend):
                         flash_parts_progress = progress_map[offset]
                     a = int(m.group(2), 0)
                     b = int(m.group(3), 0)
-                    context.progress = int(flash_parts_progress / flash_parts_num * 100) + int(a / b * 100) / flash_parts_num
+                    context.progress = (sum(file_sizes[:flash_parts_progress]) + a) / total_size * 100
                 m = re.search(r"MAC:\s*([0-9a-fA-F:]+)", line)
                 if m:
                     context.mac = m.group(1)
