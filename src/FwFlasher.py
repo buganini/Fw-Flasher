@@ -277,13 +277,13 @@ class UI(Application):
     def thread_watcher(self, func, context, port, profile, backend):
         port = backend.determine_port(context, profile, port)
         self.state.working_ports.add(port)
-        self.ok = False
+        self.context.ok = False
 
         worker = Thread(target=func, args=[context, port, profile], daemon=True)
         self.state.worker = worker
         worker.start()
         worker.join()
-        if self.ok:
+        if self.context.ok:
             print("Done")
             self.context.logs.append("Done")
         else:
