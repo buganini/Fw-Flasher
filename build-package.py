@@ -64,7 +64,7 @@ PyInstaller.__main__.run([
     'FwFlasher.py',
     "--onedir",
     "--noconfirm",
-    # "--windowed",
+    "--windowed" if platform.system() == "Darwin" else "--console",
     "--add-data=resources/icon.ico:.",
     *pyinstaller_args
 ])
