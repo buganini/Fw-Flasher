@@ -50,6 +50,7 @@ class UI(Application):
         self.state.erase_flash = False
         self.state.ports = []
         self.state.batch_context = []
+        self.state.focus = None
 
         self.context = TaskContext(self)
 
@@ -78,8 +79,8 @@ class UI(Application):
                         removed_ports = (self.state.init_ports | self.state.working_ports | self.state.idle_ports) - current_ports
 
                         new_ports = current_ports - self.state.init_ports - self.state.working_ports - self.state.idle_ports
-                        print("Removed ports: ", removed_ports)
-                        print("New ports: ", new_ports)
+                        # print("Removed ports: ", removed_ports)
+                        # print("New ports: ", new_ports)
 
                         for p in removed_ports:
                             try:
@@ -159,12 +160,19 @@ class UI(Application):
                             for context in self.state.batch_context:
                                 print(context.port)
                                 with HBox():
+                                    Label(context.port)
                                     if self.backend and self.backend.show_mac:
                                         Label("MAC:")
                                         TextField(context("mac"))
                                     ProgressBar(progress=context.progress, maximum=100).layout(weight=1)
                                     Label("" if context.ok else "Error")
-                            Spacer()
+                                    Button("Logs").click(lambda e, context: self.set_focus(context), context)
+                            if self.state.focus:
+                                Label(context.port)
+                                with Scroll().layout(weight=1).scrollY(Scroll.END):
+                                    Text("\n".join(self.state.focus.logs))
+                            else:
+                                Spacer()
                 else:
                     if self.backend and self.backend.show_mac:
                         with HBox():
@@ -175,6 +183,10 @@ class UI(Application):
                         ProgressBar(progress=self.context.progress, maximum=100)
                     with Scroll().layout(weight=1).scrollY(Scroll.END):
                         Text("\n".join(self.context.logs))
+
+
+    def set_focus(self, context):
+        self.state.focus = context
 
     def keypress(self, e):
         if e.text == "\r":
