@@ -25,6 +25,7 @@ class TaskContext(StateObject):
         super().__init__()
         self.main = main
         self.port = None
+        self.done = False
         self.ok = True
         self.mac = ""
         self.progress = 0
@@ -165,7 +166,7 @@ class UI(Application):
                                         Label("MAC:")
                                         TextField(context("mac"))
                                     ProgressBar(progress=context.progress, maximum=100).layout(weight=1)
-                                    Label("" if context.ok else "Error")
+                                    Label("Done" if context.done and context.ok else ("" if context.ok else "Error"))
                                     Button("Logs").click(lambda e, context: self.set_focus(context), context)
                             if self.state.focus:
                                 Label(context.port)

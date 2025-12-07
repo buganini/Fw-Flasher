@@ -106,6 +106,7 @@ class PyOCDBackend(Backend):
                         write_cmds_done += 1
 
                 context.progress = 100
+                context.done = True
             except Exception as e:
                 import traceback
                 context.logs.append(traceback.format_exc())

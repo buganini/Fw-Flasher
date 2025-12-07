@@ -217,3 +217,5 @@ class OpenOCDBackend(Backend):
             for line in spawn(cmd):
                 line = strip(line)
                 context.logs.append(line)
+
+        context.done = True

@@ -157,3 +157,4 @@ class DFUBackend(Backend):
 
         if has_progress:
             context.ok = True
+            context.done = True

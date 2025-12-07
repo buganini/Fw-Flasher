@@ -131,5 +131,6 @@ class BMPBackend(Backend):
             context.logs.append(line)
         if context.ok:
             context.progress = 100
+            context.done = True
         else:
             context.progress = 0

@@ -327,3 +327,5 @@ class ESPBackend(Backend):
                 cmd.append(key)
             context.logs.append("espefuse " + " ".join(cmd))
             ESPBackend.exec_in_thread(espefuse.main, cmd)
+
+        context.done = True
