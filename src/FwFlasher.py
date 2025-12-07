@@ -154,7 +154,6 @@ class UI(Application):
 
                     Spacer()
 
-                print("refresh")
                 if self.state.batch_flash:
                     with Scroll().layout(weight=1):
                         with VBox():

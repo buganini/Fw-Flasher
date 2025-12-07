@@ -25,7 +25,7 @@ def spawn(command, print_output=True, **kwargs):
 
     # Read output line by line and print simultaneously
     for line in process.stdout:
-        if sys.stdout:
+        if sys.stdout: # sometimes None on Windows
             sys.stdout.flush()   # Force immediate output
         line = line.rstrip("\r\n")
         if print_output:
