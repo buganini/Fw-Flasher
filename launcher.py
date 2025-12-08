@@ -1,4 +1,4 @@
 import sys
 import FwFlasher
 
-FwFlasher.main(sys.argv)
+FwFlasher.main(sys.argv[1:])
