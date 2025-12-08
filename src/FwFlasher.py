@@ -273,6 +273,7 @@ class UI(Application):
         t.start()
         t.join()
 
+    # esp*.main quit current thread without returning, so wrap it in a thread for post-return processing
     def thread_watcher(self, func, context, port, profile, backend):
         port = backend.determine_port(context, profile, port)
         self.state.working_ports.add(port)
