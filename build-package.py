@@ -6,9 +6,9 @@ import sys
 import itertools
 import glob
 import shutil
-from src.bmp import find_arm_none_eabi_gdb
-from src.openocd import find_openocd
-from src.dfu import find_dfu_util
+from FwFlasher.bmp import find_arm_none_eabi_gdb
+from FwFlasher.openocd import find_openocd
+from FwFlasher.dfu import find_dfu_util
 
 
 # macOS
