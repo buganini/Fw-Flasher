@@ -1,3 +1,4 @@
-import src
+import sys
+import FwFlasher
 
-src.main()
+FwFlasher.main(sys.argv)
