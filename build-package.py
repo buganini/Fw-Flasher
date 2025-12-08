@@ -61,7 +61,8 @@ else:
 print(pyinstaller_args)
 
 PyInstaller.__main__.run([
-    'FwFlasher.py',
+    'launcher.py',
+    "--name", "FwFlasher",
     "--onedir",
     "--noconfirm",
     "--windowed" if platform.system() == "Darwin" else "--console",

@@ -5,6 +5,8 @@ import esptool
 
 from .FwFlasher import UI
 
+from .FwFlasher import VERSION as __version__
+
 def main():
     ui = UI()
 
