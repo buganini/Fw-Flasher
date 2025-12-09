@@ -6,6 +6,9 @@ import sys
 import itertools
 import glob
 import shutil
+import esptool
+import espefuse
+
 from FwFlasher.bmp import find_arm_none_eabi_gdb
 from FwFlasher.openocd import find_openocd
 from FwFlasher.dfu import find_dfu_util
@@ -15,6 +18,8 @@ from FwFlasher.dfu import find_dfu_util
 ## brew install create-dmg
 ## xcrun notarytool store-credentials notarytool-creds  --apple-id your@apple.id --team-id "XXXXXXXXXX" --password "xxxx-xxxx-xxxx-xxxx"
 
+espefuse_defs = os.path.join(os.path.dirname(espefuse.__file__), "efuse_defs")
+esptool_targets_stub_flasher = os.path.join(os.path.dirname(esptool.__file__), "targets", "stub_flasher")
 
 create_dmg = False
 codesign_identity = None
@@ -33,6 +38,8 @@ else:
     pyinstaller_args.extend(["-i", 'resources/icon.ico'])
 
 pyinstaller_args.extend(["--collect-data", "esptool"])
+pyinstaller_args.extend(["--add-binary", espefuse_defs + ":espefuse/efuse_defs"])
+pyinstaller_args.extend(["--add-binary", esptool_targets_stub_flasher + ":esptool/targets/stub_flasher"])
 
 arm_none_eabi_gdb = find_arm_none_eabi_gdb()
 if arm_none_eabi_gdb:
