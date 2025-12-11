@@ -231,7 +231,7 @@ class ESPBackend(Backend):
                 try:
                     ESPBackend.exec_in_thread(espsecure.main, [
                         "encrypt-flash-data",
-                        "--aes_xts",
+                        "--aes-xts",
                         "--keyfile", flash_encryption_key,
                         "--address", offset,
                         "--output", encrypted_file,
