@@ -168,7 +168,7 @@ class UI(Application):
                                     Label("Done" if context.done and context.ok else ("" if context.ok else "Error"))
                                     Button("Logs").click(lambda e, context: self.set_focus(context), context)
                             if self.state.focus:
-                                Label(context.port)
+                                Label(self.state.focus.port)
                                 with Scroll().layout(weight=1).scrollY(Scroll.END):
                                     Text("\n".join(self.state.focus.logs))
                             else:
