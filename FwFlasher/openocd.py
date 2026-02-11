@@ -82,12 +82,12 @@ class OpenOCDBackend(Backend):
             "-c", "exit",
         ])
         print(" ".join(cmd))
-        context.state.logs.append(" ".join(cmd))
+        context.logs.append(" ".join(cmd))
         for line in spawn(cmd):
             if hasattr(line, "decode"):
                 line = line.decode("utf-8", errors="ignore")
             line = strip(line)
-            context.state.logs.append(line)
+            context.logs.append(line)
             if "Programming Finished" in line:
                 context.ok = True
 
@@ -120,7 +120,7 @@ class OpenOCDBackend(Backend):
         if not openocd:
             return
 
-        context.state.logs = []
+        context.logs = []
 
         file = profile.get('program', '')
         if os.path.isabs(file):
