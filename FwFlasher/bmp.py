@@ -88,6 +88,19 @@ class BMPBackend(Backend):
                 "--interpreter=mi",
                 "-ex", f"target extended-remote {port}",
                 "-ex", "monitor tpwr disable",
+                "-ex", "quit",
+            ]
+            print(" ".join(cmd))
+            context.logs.append(" ".join(cmd))
+            for line in spawn_gdbmi(cmd):
+                line = strip(line)
+                context.logs.append(line)
+            time.sleep(1)
+
+            cmd = [
+                arm_none_eabi_gdb,
+                "--interpreter=mi",
+                "-ex", f"target extended-remote {port}",
                 "-ex", "monitor tpwr enable",
                 "-ex", "quit",
             ]
@@ -96,14 +109,13 @@ class BMPBackend(Backend):
             for line in spawn_gdbmi(cmd):
                 line = strip(line)
                 context.logs.append(line)
-            time.sleep(0.5)
+            time.sleep(0.1)
 
         file = file.replace("\\", "\\\\").replace(" ", "\\ ")
         cmd = [
             arm_none_eabi_gdb,
             "--interpreter=mi",
             "-ex", f"target extended-remote {port}",
-            "-ex", "monitor tpwr enable",
         ]
         if profile.get("connect_rst", False):
             cmd.extend([
@@ -125,7 +137,7 @@ class BMPBackend(Backend):
                 kv = {k:v[1:-1] for k,v in [kv.split("=") for kv in line[11:-1].split(",")]}
                 if "total-size" in kv and "total-sent" in kv:
                     context.progress = int(int(kv["total-sent"]) / int(kv["total-size"]) * 100)
-                main.wait()
+                context.main.wait()
             if "Error" in line:
                 context.ok = False
             context.logs.append(line)
