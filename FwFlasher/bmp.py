@@ -180,10 +180,11 @@ class BMPBackend(Backend):
             "-ex", f"attach {profile.get('attach', '1')}",
             "-ex", f"monitor rtt enable",
             "-ex", f"run",
+            "-ex", "quit",
         ]
         context.monitor_proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        ser = serial.Serial(monitor_port, 115200, timeout=1)
-        while context.monitor_proc:
+        ser = serial.Serial(monitor_port, 115200, timeout=0.25)
+        while context.monitor_proc and context.monitor_proc.poll() is None:
             line = ser.readline()
             line = line.decode("utf-8").rstrip("\r\n")
             line = re.sub(r"\x1b\[[0-9;]*m", "", line)
