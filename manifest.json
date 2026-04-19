@@ -60,6 +60,7 @@
         "attach": 1,
         "tpwr": true,
         "connect_rst": true,
+        "monitor": true,
         "load": "nrf52_controller/merged.hex"
     },
     "[OpenOCD/CMSIS-DAP] NRF52 Controller": {
