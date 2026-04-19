@@ -30,6 +30,8 @@ class TaskContext(StateObject):
         self.mac = ""
         self.progress = 0
         self.logs = []
+        self.monitor_proc = None
+        self.monitor_logs = []
 
 class UI(Application):
     def __init__(self):
@@ -61,6 +63,10 @@ class UI(Application):
         Thread(target=self.ports_watcher, daemon=True).start()
 
     def cleanup(self):
+        proc = self.context.monitor_proc
+        self.context.monitor_proc = None
+        if proc:
+            proc.terminate()
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
@@ -181,8 +187,13 @@ class UI(Application):
 
                     if self.backend and self.backend.show_progress:
                         ProgressBar(progress=self.context.progress, maximum=100)
-                    with Scroll().layout(weight=1).scrollY(Scroll.END):
-                        Text("\n".join(self.context.logs))
+                    with HBox():
+                        with Scroll().layout(weight=1).scrollY(Scroll.END):
+                            Text("\n".join(self.context.logs))
+
+                        if self.backend and self.backend.show_monitor and self.state.profile and self.state.profiles[self.state.profile].get("monitor"):
+                            with Scroll().layout(weight=1).scrollY(Scroll.END):
+                                Text("\n".join(self.context.monitor_logs))
 
 
     def set_focus(self, context):

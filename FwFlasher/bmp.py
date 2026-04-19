@@ -5,6 +5,8 @@ import sys
 import shutil
 import re
 from .common import *
+import subprocess
+import serial
 
 def find_arm_none_eabi_gdb():
     try:
@@ -27,6 +29,7 @@ arm_none_eabi_gdb = find_arm_none_eabi_gdb()
 class BMPBackend(Backend):
     erase_flash = None
     show_progress = True
+    show_monitor = True
 
     @staticmethod
     def list_ports(main, profile):
@@ -38,11 +41,15 @@ class BMPBackend(Backend):
         sn = set()
         for p in ports:
             if not p.serial_number in sn:
-                ret.append(p.name)
+                ret.append("/dev/"+p.name)
                 sn.add(p.serial_number)
-        if not sys.platform.startswith('win'):
-            ret = ["/dev/"+p for p in ret]
+        # if not sys.platform.startswith('win'):
+        #     ret = ["/dev/"+p for p in ret]
         return ret
+
+    @staticmethod
+    def get_monitor_port(main, port):
+        return port[:-1]+"3"
 
     @staticmethod
     def precheck(context):
@@ -52,9 +59,42 @@ class BMPBackend(Backend):
             context.logs.append("Error: arm-none-eabi-gdb not found")
 
     @staticmethod
+    def twpr_cycle(context, port):
+        context.logs.append(f"TPWR power cycle")
+        cmd = [
+            arm_none_eabi_gdb,
+            "--interpreter=mi",
+            "-ex", f"target extended-remote {port}",
+            "-ex", "monitor tpwr disable",
+            "-ex", "quit",
+        ]
+        print(" ".join(cmd))
+        context.logs.append(" ".join(cmd))
+        for line in spawn_gdbmi(cmd):
+            line = strip(line)
+            context.logs.append(line)
+        time.sleep(1)
+
+        cmd = [
+            arm_none_eabi_gdb,
+            "--interpreter=mi",
+            "-ex", f"target extended-remote {port}",
+            "-ex", "monitor tpwr enable",
+            "-ex", "quit",
+        ]
+        print(" ".join(cmd))
+        context.logs.append(" ".join(cmd))
+        for line in spawn_gdbmi(cmd):
+            line = strip(line)
+            context.logs.append(line)
+        time.sleep(0.1)
+
+    @staticmethod
     def flash(context, port, profile):
         if not arm_none_eabi_gdb:
             return
+
+        context.monitor_logs = []
 
         context.logs = []
         context.progress = 0
@@ -82,34 +122,7 @@ class BMPBackend(Backend):
         context.ok = False
 
         if profile.get("tpwr", True):
-            context.logs.append(f"TPWR power cycle")
-            cmd = [
-                arm_none_eabi_gdb,
-                "--interpreter=mi",
-                "-ex", f"target extended-remote {port}",
-                "-ex", "monitor tpwr disable",
-                "-ex", "quit",
-            ]
-            print(" ".join(cmd))
-            context.logs.append(" ".join(cmd))
-            for line in spawn_gdbmi(cmd):
-                line = strip(line)
-                context.logs.append(line)
-            time.sleep(1)
-
-            cmd = [
-                arm_none_eabi_gdb,
-                "--interpreter=mi",
-                "-ex", f"target extended-remote {port}",
-                "-ex", "monitor tpwr enable",
-                "-ex", "quit",
-            ]
-            print(" ".join(cmd))
-            context.logs.append(" ".join(cmd))
-            for line in spawn_gdbmi(cmd):
-                line = strip(line)
-                context.logs.append(line)
-            time.sleep(0.1)
+            BMPBackend.twpr_cycle(context, port)
 
         file = file.replace("\\", "\\\\").replace(" ", "\\ ")
         cmd = [
@@ -144,5 +157,38 @@ class BMPBackend(Backend):
         if context.ok:
             context.progress = 100
             context.done = True
+            context.logs.append("Flash done")
+
+            if profile.get("monitor", False):
+                BMPBackend.monitor(context, port, profile)
         else:
+            context.logs.append("Flash error")
             context.progress = 0
+
+        if profile.get("tpwr", True):
+            BMPBackend.twpr_cycle(context, port)
+
+    def monitor(context, port, profile):
+        monitor_port = BMPBackend.get_monitor_port(context, port)
+        context.logs.append(f"Monitor start on port {monitor_port}")
+        cmd = [
+            arm_none_eabi_gdb,
+            "--interpreter=mi",
+            "-ex", f"target extended-remote {port}",
+            "-ex", "monitor swd_scan",
+            "-ex", "set confirm off",
+            "-ex", f"attach {profile.get('attach', '1')}",
+            "-ex", f"monitor rtt enable",
+            "-ex", f"run",
+        ]
+        context.monitor_proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        ser = serial.Serial(monitor_port, 115200, timeout=1)
+        while context.monitor_proc:
+            line = ser.readline()
+            line = line.decode("utf-8").rstrip("\r\n")
+            line = re.sub(r"\x1b\[[0-9;]*m", "", line)
+            context.monitor_logs.append(line)
+            context.main.wait()
+        ser.close()
+        context.monitor_proc = None
+        context.logs.append("Monitor done")

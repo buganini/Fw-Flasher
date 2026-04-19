@@ -65,6 +65,7 @@ def resource_path(relative_path):
 class Backend():
     show_mac = False
     show_progress = False
+    show_monitor = False
     erase_flash = False
 
     @staticmethod
