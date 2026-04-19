@@ -277,7 +277,9 @@ class ESPBackend(Backend):
                     b = int(m.group(3), 0)
                     context.progress = (sum(file_sizes[:flash_parts_progress]) + a) / total_size * 100
                 else:
-                    context.logs.append(re.sub(r"\x1b\[[0-9;]*\w", "", line))
+                    line = re.sub(r"\x1b\[[0-9;]*\w", "", line.strip())
+                    if line:
+                        context.logs.append(line)
                 m = re.search(r"MAC:\s*([0-9a-fA-F:]+)", line)
                 if m:
                     context.mac = m.group(1)
