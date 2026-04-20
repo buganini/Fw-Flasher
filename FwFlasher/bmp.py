@@ -196,11 +196,12 @@ class BMPBackend(Backend):
         ser = serial.Serial(monitor_port, 115200, timeout=0.25)
         while context.monitor_proc and context.monitor_proc.poll() is None:
             line = ser.readline()
+            if not line:
+                continue
             line = line.decode("utf-8").rstrip("\r\n")
             line = re.sub(r"\x1b\[[0-9;]*m", "", line)
-            if line:
-                context.monitor_logs.append(line)
-                context.main.wait()
+            context.monitor_logs.append(line)
+            context.main.wait()
         ser.close()
         context.monitor_proc = None
         context.logs.append("Monitor done")
