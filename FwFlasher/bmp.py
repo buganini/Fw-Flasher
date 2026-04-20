@@ -50,7 +50,14 @@ class BMPBackend(Backend):
 
     @staticmethod
     def get_monitor_port(main, port):
-        return port[:-1]+"3"
+        if sys.platform.startswith('win'):
+            m = re.match(r"(\d+)$", port)
+            if m:
+                n = int(m.group(1))+1
+                return f"COM{n}"
+            return None
+        else:
+            return port[:-1]+"3"
 
     @staticmethod
     def precheck(context):
@@ -171,6 +178,8 @@ class BMPBackend(Backend):
 
     def monitor(context, port, profile):
         monitor_port = BMPBackend.get_monitor_port(context, port)
+        if not monitor_port:
+            return
         context.logs.append(f"Monitor start on port {monitor_port}")
         cmd = [
             arm_none_eabi_gdb,
