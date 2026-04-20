@@ -41,10 +41,11 @@ class BMPBackend(Backend):
         sn = set()
         for p in ports:
             if not p.serial_number in sn:
-                ret.append("/dev/"+p.name)
+                if sys.platform.startswith('win'):
+                    ret.append(p.name)
+                else:
+                    ret.append("/dev/"+p.name)
                 sn.add(p.serial_number)
-        # if not sys.platform.startswith('win'):
-        #     ret = ["/dev/"+p for p in ret]
         return ret
 
     @staticmethod
