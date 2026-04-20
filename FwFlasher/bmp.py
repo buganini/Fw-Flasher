@@ -198,8 +198,9 @@ class BMPBackend(Backend):
             line = ser.readline()
             line = line.decode("utf-8").rstrip("\r\n")
             line = re.sub(r"\x1b\[[0-9;]*m", "", line)
-            context.monitor_logs.append(line)
-            context.main.wait()
+            if line:
+                context.monitor_logs.append(line)
+                context.main.wait()
         ser.close()
         context.monitor_proc = None
         context.logs.append("Monitor done")
