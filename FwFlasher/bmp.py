@@ -51,7 +51,7 @@ class BMPBackend(Backend):
     @staticmethod
     def get_monitor_port(main, port):
         if sys.platform.startswith('win'):
-            m = re.match(r"(\d+)$", port)
+            m = re.match(r"^COM(\d+)$", port)
             if m:
                 n = int(m.group(1))+1
                 return f"COM{n}"
