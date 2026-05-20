@@ -5,6 +5,7 @@ import glob
 import serial
 import subprocess
 import json
+from threading import Timer
 
 try:
     base_path = sys._MEIPASS
@@ -12,7 +13,7 @@ try:
 except Exception:
     ARGV0 = [sys.executable, sys.argv[0]]
 
-def spawn(command, print_output=True, **kwargs):
+def spawn(command, print_output=True, timeout=30, **kwargs):
     process = subprocess.Popen(
         command,
         stdout=subprocess.PIPE,
@@ -23,8 +24,18 @@ def spawn(command, print_output=True, **kwargs):
         **kwargs
     )
 
+    def timeout_handler(process):
+        process.terminate()
+        print("Command timed out")
+
+    # timer = Timer(timeout, timeout_handler, args=[process])
+    # timer.start()
+
     # Read output line by line and print simultaneously
     for line in process.stdout:
+        # timer.cancel()
+        # timer = Timer(timeout, timeout_handler, args=[process])
+        # timer.start()
         if sys.stdout: # sometimes None on Windows
             sys.stdout.flush()   # Force immediate output
         line = line.rstrip("\r\n")
