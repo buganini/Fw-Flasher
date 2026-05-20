@@ -13,7 +13,7 @@ import esptool
 import pyocd
 import time
 
-VERSION = "0.15.2"
+VERSION = "0.16"
 
 from .common import *
 from .bmp import BMPBackend
