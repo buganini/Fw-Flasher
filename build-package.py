@@ -8,14 +8,19 @@ import glob
 import shutil
 import esptool
 import espefuse
-import pyocd
+
+from PyInstaller.utils.hooks import get_package_paths, collect_entry_point
 
 from FwFlasher.bmp import find_arm_none_eabi_gdb
 from FwFlasher.openocd import find_openocd
 from FwFlasher.dfu import find_dfu_util
 
-pyocd_path = os.path.dirname(pyocd.__file__)
+datas_probe, hiddenimports_probe = collect_entry_point('pyocd.probe')
+datas_rtos, hiddenimports_rtos = collect_entry_point('pyocd.rtos')
 
+pyocd_path = get_package_paths('pyocd')[1]
+pylink_path = get_package_paths('pylink')[1]
+cmsis_pack_manager_path = get_package_paths('cmsis_pack_manager')[1]
 
 # macOS
 ## brew install create-dmg
@@ -70,17 +75,24 @@ else:
 
 print(pyinstaller_args)
 
-PyInstaller.__main__.run([
+pyinstaller_main_args = [
     'launcher.py',
     "--name", "FwFlasher",
     "--onedir",
     "--noconfirm",
     "--windowed" if platform.system() == "Darwin" else "--console",
     "--add-data=resources/icon.ico:.",
-    f"--add-data={pyocd_path}/debug/sequences/sequences.lark:pyocd/debug/sequences",
-    f"--add-data={pyocd_path}/debug/svd/svd_data.zip:pyocd/debug/svd",
+    f"--add-data={pyocd_path}:pyocd",
+    f"--add-data={pylink_path}:pylink",
+    f"--add-data={cmsis_pack_manager_path}:cmsis_pack_manager",
+    *[f"--add-data={data[0]}:{data[1]}" for data in datas_probe],
+    *[f"--add-data={data[0]}:{data[1]}" for data in datas_rtos],
+    *[f"--hidden-import={data}" for data in hiddenimports_probe],
+    *[f"--hidden-import={data}" for data in hiddenimports_rtos],
     *pyinstaller_args
-])
+]
+print(pyinstaller_main_args)
+PyInstaller.__main__.run(pyinstaller_main_args)
 
 if codesign_identity:
     for path in itertools.chain(

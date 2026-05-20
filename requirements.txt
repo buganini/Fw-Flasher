@@ -3,4 +3,4 @@ pyocd==0.44.1
 QPUIQ==0.38
 pyserial==3.5
 PySide6_Essentials
-pyinstaller
+pyinstaller==6.20.0
