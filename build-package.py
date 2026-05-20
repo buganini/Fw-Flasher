@@ -8,10 +8,13 @@ import glob
 import shutil
 import esptool
 import espefuse
+import pyocd
 
 from FwFlasher.bmp import find_arm_none_eabi_gdb
 from FwFlasher.openocd import find_openocd
 from FwFlasher.dfu import find_dfu_util
+
+pyocd_path = os.path.dirname(pyocd.__file__)
 
 
 # macOS
@@ -74,6 +77,8 @@ PyInstaller.__main__.run([
     "--noconfirm",
     "--windowed" if platform.system() == "Darwin" else "--console",
     "--add-data=resources/icon.ico:.",
+    "--add-data", f"{pyocd_path}/debug/sequences/sequences.lark;pyocd/debug/sequences",
+    "--add-data", f"{pyocd_path}/debug/svd/svd_data.zip;pyocd/debug/svd",
     *pyinstaller_args
 ])
 
