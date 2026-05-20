@@ -204,6 +204,7 @@ class UI(Application):
             self.flash()
 
     def changeProfile(self, e):
+        self.state.batch_flash = False
         backend = self.getBackend(self.state.profiles[self.state.profile])
         if backend and backend != self.backend:
             self.context.logs = []
