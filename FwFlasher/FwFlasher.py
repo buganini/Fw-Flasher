@@ -11,6 +11,7 @@ import atexit
 import shutil
 import esptool
 import pyocd
+import time
 
 VERSION = "0.15.2"
 
@@ -29,6 +30,8 @@ class TaskContext(StateObject):
         self.done = False
         self.ok = True
         self.mac = ""
+        self.t0 = 0
+        self.t1 = 0
         self.progress = 0
         self.logs = []
         self.monitor_proc = None
@@ -68,6 +71,9 @@ class UI(Application):
         self.context.monitor_proc = None
         if proc:
             proc.terminate()
+        for context in self.state.batch_context:
+            if context.monitor_proc:
+                context.monitor_proc.terminate()
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
@@ -257,6 +263,7 @@ class UI(Application):
             return None
 
     def flash(self):
+        self.context.t0 = time.time()
         self.context.progress = 0
         profile = self.state.profiles.get(self.state.profile)
         if not profile:
@@ -290,17 +297,19 @@ class UI(Application):
     def thread_watcher(self, func, context, port, profile, backend):
         port = backend.determine_port(context, profile, port)
         self.state.working_ports.add(port)
-        self.context.ok = False
+        context.ok = False
 
         worker = Thread(target=func, args=[context, port, profile], daemon=True)
         self.state.worker = worker
         worker.start()
         worker.join()
-        if self.context.ok:
+        context.t1 = time.time()
+        if context.ok:
             print("Done")
-            self.context.logs.append("Done")
+            context.logs.append("Done")
         else:
-            self.context.logs.append("Error")
+            context.logs.append("Error")
+        context.logs.append(f"Elapsed time: {int(context.t1 - context.t0)} seconds")
         self.state.worker = None
         self.state.idle_ports.add(port)
         self.state.working_ports.remove(port)
