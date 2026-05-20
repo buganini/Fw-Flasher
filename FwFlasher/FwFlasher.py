@@ -11,7 +11,7 @@ import atexit
 import shutil
 import esptool
 
-VERSION = "0.14.1"
+VERSION = "0.15"
 
 from .common import *
 from .bmp import BMPBackend
