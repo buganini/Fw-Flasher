@@ -12,7 +12,7 @@ import shutil
 import esptool
 import pyocd
 
-VERSION = "0.15"
+VERSION = "0.15.1"
 
 from .common import *
 from .bmp import BMPBackend
