@@ -45,6 +45,7 @@ def spawn(command, print_output=True, timeout=30, **kwargs):
 
     # Wait for process to complete and get return code
     return_code = process.wait()
+    timer.cancel()
 
     return return_code
 
