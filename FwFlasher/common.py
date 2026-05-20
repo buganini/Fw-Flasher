@@ -28,14 +28,14 @@ def spawn(command, print_output=True, timeout=30, **kwargs):
         process.terminate()
         print("Command timed out")
 
-    # timer = Timer(timeout, timeout_handler, args=[process])
-    # timer.start()
+    timer = Timer(timeout, timeout_handler, args=[process])
+    timer.start()
 
     # Read output line by line and print simultaneously
     for line in process.stdout:
-        # timer.cancel()
-        # timer = Timer(timeout, timeout_handler, args=[process])
-        # timer.start()
+        timer.cancel()
+        timer = Timer(timeout, timeout_handler, args=[process])
+        timer.start()
         if sys.stdout: # sometimes None on Windows
             sys.stdout.flush()   # Force immediate output
         line = line.rstrip("\r\n")
