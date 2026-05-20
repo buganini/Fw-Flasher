@@ -10,6 +10,7 @@ import tempfile
 import atexit
 import shutil
 import esptool
+import pyocd
 
 VERSION = "0.15"
 
@@ -117,7 +118,7 @@ class UI(Application):
             time.sleep(1)
 
     def content(self):
-        title = f"Firmware Flasher v{VERSION} (esptool {esptool.__version__}, PUI {PUI.__version__} {PUI_BACKEND})"
+        title = f"Firmware Flasher v{VERSION} (esptool {esptool.__version__}, PyOCD {pyocd.__version__}, PUI {PUI.__version__} {PUI_BACKEND})"
         with Window(title=title, size=(800, 600), icon=resource_path("icon.ico")).keypress(self.keypress):
             with VBox():
                 with HBox():
