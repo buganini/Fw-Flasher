@@ -77,8 +77,8 @@ PyInstaller.__main__.run([
     "--noconfirm",
     "--windowed" if platform.system() == "Darwin" else "--console",
     "--add-data=resources/icon.ico:.",
-    "--add-data", f"{pyocd_path}/debug/sequences/sequences.lark;pyocd/debug/sequences",
-    "--add-data", f"{pyocd_path}/debug/svd/svd_data.zip;pyocd/debug/svd",
+    f"--add-data={pyocd_path}/debug/sequences/sequences.lark:pyocd/debug/sequences",
+    f"--add-data={pyocd_path}/debug/svd/svd_data.zip:pyocd/debug/svd",
     *pyinstaller_args
 ])
 
