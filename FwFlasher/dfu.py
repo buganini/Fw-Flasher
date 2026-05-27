@@ -33,6 +33,15 @@ def find_dfu_util():
 
 dfu_util = find_dfu_util()
 
+def dfu_util_exec(args):
+    if not dfu_util:
+        print("Error: dfu-util not found")
+        return
+    cmd = [dfu_util, *args]
+    for line in spawn(cmd, print_output=False):
+        line = strip(line)
+        print(line)
+
 class DFUBackend(Backend):
     show_progress = True
     erase_flash = None

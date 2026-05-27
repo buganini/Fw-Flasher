@@ -3,6 +3,7 @@ import os
 import esptool
 from .py_ocd import sequencer as pyocd_sequencer
 from .openocd import openocd_exec
+from .dfu import dfu_util_exec
 
 from .FwFlasher import UI
 
@@ -19,6 +20,9 @@ def main(args=None):
             return
         if args[0] == "openocd":
             openocd_exec(args[1:])
+            return
+        if args[0] == "dfu-util":
+            dfu_util_exec(args[1:])
             return
         if args[0] == "pyocd":
             sub = args[1]
