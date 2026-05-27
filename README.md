@@ -10,7 +10,7 @@ Engineers deliver firmware and a manifest.json file for all the complicated sett
     * esptool
         * type=esp*
         * Experimental external enablement of flash encryption (development mode) + secure boot for esp32c3
-    * Black Magic Probe
+    * [Black Magic Probe](doc/bmp.md)
         * type=bmp
     * [OpenOCD](doc/openocd.md)
         * type=openocd
