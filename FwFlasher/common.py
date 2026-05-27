@@ -52,9 +52,9 @@ def spawn(command, print_output=True, timeout=30, **kwargs):
 def spawn_gdbmi(command):
     for line in spawn(command):
         if line:
-            if line[0] in "@~&":
+            if line[0] in "@&":
                 yield json.loads(line[1:]).rstrip("\r\n")
-            elif line[0] in "=":
+            elif line[0] in "=~":
                 continue
             else:
                 yield line
