@@ -60,11 +60,12 @@ class BMPBackend(Backend):
             return port[:-1]+"3"
 
     @staticmethod
-    def precheck(context):
+    def precheck(context, profile):
         if arm_none_eabi_gdb:
             print(f"Found {arm_none_eabi_gdb}")
         else:
             context.logs.append("Error: arm-none-eabi-gdb not found")
+            return
 
     @staticmethod
     def twpr_cycle(context, port):

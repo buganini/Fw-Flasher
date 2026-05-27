@@ -79,7 +79,24 @@
         "target": "nrf52.cfg",
         "program": "nrf52_controller/merged.hex"
     },
-    "[OpenOCD/ST-Link] STM32 Controller": {
+    "[OpenOCD/ST-Link] STM32U5 Controller": {
+        "description": "STM32 U5",
+        "type": "openocd",
+        "interface": "stlink.cfg",
+        "target": "stm32u5x.cfg",
+        "before": [
+            "reset halt"
+        ],
+        "after": [
+            "reset halt",
+            "reset run"
+        ],
+        "programs": [
+            "bootloader.hex",
+            "firmware.hex"
+        ]
+    },
+    "[OpenOCD/ST-Link] STM32F1x Controller": {
         "description": "[OpenOCD/ST-Link] STM32 Controller",
         "type": "openocd",
         "interface": "stlink.cfg",
@@ -93,8 +110,10 @@
             "stm32f1x lock 0",
             "reset run"
         ],
-        "program": "firmware.bin",
-        "program-offset": "0x08000000"
+        "programs": [
+            "bootloader.hex",
+            ["firmware.bin", "0x08000000"]
+        ]
     },
     "[DFU] BlackMagicProbe": {
         "description": "[DFU] BlackMagicProbe",

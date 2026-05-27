@@ -52,11 +52,12 @@ class DFUBackend(Backend):
         return ports
 
     @staticmethod
-    def precheck(context):
+    def precheck(context, profile):
         if dfu_util:
             print(f"Found {dfu_util}")
         else:
             context.logs.append("Error: dfu_util not found")
+            return
 
     @staticmethod
     def flash(context, port, profile):

@@ -215,7 +215,7 @@ class UI(Application):
         backend = self.getBackend(self.state.profiles[self.state.profile])
         if backend and backend != self.backend:
             self.context.logs = []
-            backend.precheck(self)
+            backend.precheck(self, self.state.profiles[self.state.profile])
             self.backend = backend
             self.state.port = "Auto"
         self.state.erase_flash = self.state.profiles[self.state.profile].get("erase-flash", False)
