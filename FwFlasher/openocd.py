@@ -24,6 +24,15 @@ def find_openocd():
 
 openocd = find_openocd()
 
+def openocd_exec(args):
+    cmd = [
+        openocd[0],
+        *args
+    ]
+    for line in spawn(cmd):
+        line = strip(line)
+        print(line)
+
 class OpenOCDBackend(Backend):
     show_progress = False
 

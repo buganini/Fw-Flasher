@@ -2,6 +2,7 @@ import sys
 import os
 import esptool
 from .py_ocd import sequencer as pyocd_sequencer
+from .openocd import openocd_exec
 
 from .FwFlasher import UI
 
@@ -15,6 +16,9 @@ def main(args=None):
     if len(args) > 0:
         if args[0] == "esptool":
             esptool.main(args[1:])
+            return
+        if args[0] == "openocd":
+            openocd_exec(args[1:])
             return
         if args[0] == "pyocd":
             sub = args[1]
