@@ -50,7 +50,7 @@ class OpenOCDBackend(Backend):
         return ret
 
     @staticmethod
-    def precheck(main, profile):
+    def precheck(main, context, profile):
         if openocd:
             print(f"Found {openocd}")
         else:
@@ -63,15 +63,15 @@ class OpenOCDBackend(Backend):
             file = program[0]
             if not file.lower().endswith(".hex") and program[1] is None:
                 ok = False
-                main.context.logs.append(f"Error: {file} requires a offset")
+                context.logs.append(f"Error: {file} requires a offset")
                 continue
             if not os.path.isabs(file):
                 file = os.path.join(main.state.root, file)
             if not os.path.exists(file):
                 ok = False
-                main.context.logs.append(f"Error: File not found: {file}")
+                context.logs.append(f"Error: File not found: {file}")
         if not programs:
-            main.context.logs.append("Error: Nothing to flash")
+            context.logs.append("Error: Nothing to flash")
             ok = False
         return ok
 

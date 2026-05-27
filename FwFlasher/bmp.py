@@ -60,12 +60,26 @@ class BMPBackend(Backend):
             return port[:-1]+"3"
 
     @staticmethod
-    def precheck(context, profile):
+    def precheck(main, context, profile):
         if arm_none_eabi_gdb:
             print(f"Found {arm_none_eabi_gdb}")
         else:
             context.logs.append("Error: arm-none-eabi-gdb not found")
-            return
+            return False
+
+        ok = True
+        load = profile.get('load', '')
+        if load:
+            for file in load:
+                if not os.path.isabs(file):
+                    file = os.path.join(main.state.root, file)
+                if not os.path.exists(file):
+                    context.logs.append(f"Error: File not found: {file}")
+                    ok = False
+        else:
+            context.logs.append("Error: Nothing to load")
+            ok = False
+        return ok
 
     @staticmethod
     def twpr_cycle(context, port):
@@ -108,15 +122,6 @@ class BMPBackend(Backend):
         context.logs = []
         context.progress = 0
 
-        file = profile.get('load', '')
-        if os.path.isabs(file):
-            pass
-        else:
-            file = os.path.join(context.main.state.root, file)
-        if not os.path.exists(file):
-            context.logs.append(f"Error: File not found: {file}")
-            return
-
         if port == "Auto":
             ports = BMPBackend.list_ports(context, profile)
             if ports:
@@ -133,36 +138,42 @@ class BMPBackend(Backend):
         if profile.get("tpwr", True):
             BMPBackend.twpr_cycle(context, port)
 
-        file = file.replace("\\", "\\\\").replace(" ", "\\ ")
-        cmd = [
-            arm_none_eabi_gdb,
-            "--interpreter=mi",
-            "-ex", f"target extended-remote {port}",
-        ]
-        if profile.get("connect_rst", False):
+        load = profile.get('load', '')
+        total = len(load)
+        for i, file in enumerate(load):
+            if not os.path.isabs(file):
+                file = os.path.join(context.main.state.root, file)
+
+            file = file.replace("\\", "\\\\").replace(" ", "\\ ")
+            cmd = [
+                arm_none_eabi_gdb,
+                "--interpreter=mi",
+                "-ex", f"target extended-remote {port}",
+            ]
+            if profile.get("connect_rst", False):
+                cmd.extend([
+                    "-ex", "monitor connect_rst enable",
+                ])
             cmd.extend([
-                "-ex", "monitor connect_rst enable",
+                "-ex", "monitor swd_scan",
+                "-ex", "set confirm off",
+                "-ex", f"attach {profile.get('attach', '1')}",
+                "-ex", f"load {file}",
+                "-ex", "quit",
             ])
-        cmd.extend([
-            "-ex", "monitor swd_scan",
-            "-ex", "set confirm off",
-            "-ex", f"attach {profile.get('attach', '1')}",
-            "-ex", f"load {file}",
-            "-ex", "quit",
-        ])
-        print(" ".join(cmd))
-        context.ok = True
-        context.logs.append(" ".join(cmd))
-        for line in spawn_gdbmi(cmd):
-            line = strip(line)
-            if line.startswith("+download,"):
-                kv = {k:v[1:-1] for k,v in [kv.split("=") for kv in line[11:-1].split(",")]}
-                if "total-size" in kv and "total-sent" in kv:
-                    context.progress = int(int(kv["total-sent"]) / int(kv["total-size"]) * 100)
-                context.main.wait()
-            if "Error" in line:
-                context.ok = False
-            context.logs.append(line)
+            print(" ".join(cmd))
+            context.ok = True
+            context.logs.append(" ".join(cmd))
+            for line in spawn_gdbmi(cmd):
+                line = strip(line)
+                if line.startswith("+download,"):
+                    kv = {k:v[1:-1] for k,v in [kv.split("=") for kv in line[11:-1].split(",")]}
+                    if "total-size" in kv and "total-sent" in kv:
+                        context.progress = i * 100 / total + int(int(kv["total-sent"]) / int(kv["total-size"]) * 100) / total
+                    context.main.wait()
+                if "Error" in line:
+                    context.ok = False
+                context.logs.append(line)
         if context.ok:
             context.progress = 100
             context.done = True

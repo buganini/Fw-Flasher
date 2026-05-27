@@ -215,7 +215,7 @@ class UI(Application):
         backend = self.getBackend(self.state.profiles[self.state.profile])
         if backend and backend != self.backend:
             self.context.logs = []
-            backend.precheck(self, self.state.profiles[self.state.profile])
+            backend.precheck(self, self.context, self.state.profiles[self.state.profile])
             self.backend = backend
             self.state.port = "Auto"
         self.state.erase_flash = self.state.profiles[self.state.profile].get("erase-flash", False)
@@ -263,6 +263,9 @@ class UI(Application):
             return None
 
     def flash(self):
+        if not self.backend.precheck(self, self.context, self.state.profiles[self.state.profile]):
+            return
+
         self.context.t0 = time.time()
         self.context.progress = 0
         profile = self.state.profiles.get(self.state.profile)

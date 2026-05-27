@@ -114,7 +114,7 @@ class Backend():
         return result
 
     @staticmethod
-    def precheck(context, profile):
+    def precheck(main, context, profile):
         pass
 
     @staticmethod

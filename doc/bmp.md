@@ -7,7 +7,7 @@
     "tpwr": true,
     "connect_rst": true,
     "monitor": true,
-    "load": "nrf52_controller/merged.hex"
+    "load": ["nrf52_controller/merged.hex"]
 }
 ```
 
@@ -16,6 +16,8 @@
 * tpwr
 * connect_rst
 * load
+
+a file or a list of files to load
 
 * monitor
 
