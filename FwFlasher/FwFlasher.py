@@ -196,11 +196,11 @@ class UI(Application):
                         ProgressBar(progress=self.context.progress, maximum=100)
                     with HBox():
                         with Scroll().layout(weight=1).scrollY(Scroll.END):
-                            Text("\n".join(self.context.logs))
+                            Text("\n".join(self.context.logs), selectable=True)
 
                         if self.backend and self.backend.show_monitor and self.state.profile and self.state.profiles[self.state.profile].get("monitor"):
                             with Scroll().layout(weight=1).scrollY(Scroll.END):
-                                Text("\n".join(self.context.monitor_logs))
+                                Text("\n".join(self.context.monitor_logs), selectable=True)
 
 
     def set_focus(self, context):
