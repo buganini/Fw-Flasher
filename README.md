@@ -7,7 +7,7 @@ Engineers deliver firmware and a manifest.json file for all the complicated sett
 * Config with [JSON file](https://github.com/buganini/Fw-Flasher/blob/main/manifest.json)
 
 * Multiple backends
-    * esptool
+    * [esptool](doc/esp.md)
         * type=esp*
         * Experimental external enablement of flash encryption (development mode) + secure boot for esp32c3
     * [Black Magic Probe](doc/bmp.md)
