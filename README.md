@@ -17,7 +17,7 @@ Engineers deliver firmware and a manifest.json file for all the complicated sett
         * Interfaces with device enumeration support:
             * cmsis-dap
             * jlink
-    * dfu-util
+    * [dfu-util](doc/dfu.md)
         * type=dfu
         * Still needs zadig to fix driver issue on windows
     * [PyOCD](doc/pyocd.md)
