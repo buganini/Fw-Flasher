@@ -67,6 +67,7 @@ class DFUBackend(Backend):
         else:
             context.logs.append("Error: dfu_util not found")
             return False
+        return True
 
     @staticmethod
     def flash(context, port, profile):

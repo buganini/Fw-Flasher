@@ -25,19 +25,16 @@ def main(args=None):
             dfu_util_exec(args[1:])
             return
         if args[0] == "pyocd":
-            sub = args[1]
-            if sub == "exec":
-                sys.argv.pop(0)
-                sys.argv.pop(0)
-                from pyocd import __main__ as pyocd_main
-                pyocd_main.main()
-            elif sub == "cmd":
-                port = args[2]
-                target = args[3]
-                frequency = int(args[4])
-                seq = args[5:]
-                pyocd_sequencer(port, target, frequency, seq)
-
+            sys.argv.pop(0)
+            from pyocd import __main__ as pyocd_main
+            pyocd_main.main()
+            return
+        if args[0] == "pyocd_seq":
+            port = args[1]
+            target = args[2]
+            frequency = int(args[3])
+            seq = args[4:]
+            pyocd_sequencer(port, target, frequency, seq)
             return
         ui.loadFile(args[0])
     elif os.path.exists("manifest/manifest.json"):

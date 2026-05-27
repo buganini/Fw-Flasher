@@ -115,7 +115,7 @@ class Backend():
 
     @staticmethod
     def precheck(main, context, profile):
-        pass
+        return True
 
     @staticmethod
     def flash(context, port, profile):

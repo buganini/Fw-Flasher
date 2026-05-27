@@ -63,21 +63,38 @@ class PyOCDBackend(Backend):
         return [p.unique_id for p in allProbes]
 
     @staticmethod
+    def precheck(main, context, profile):
+        ok = True
+
+        target = profile.get('target', None)
+        if not target:
+            context.logs.append("Error: target not set")
+            ok = False
+
+        commands = profile.get('commands', [])
+        for cmd in commands:
+            if cmd[0] in ("load", "nrf91-update-modem-fw"):
+                file = cmd[1]
+                if not os.path.isabs(file):
+                    file = os.path.join(main.state.root, file)
+                if not os.path.exists(file):
+                    context.logs.append(f"Error: File not found: {file}")
+                    ok = False
+        if not commands:
+            context.logs.append("Error: commands are empty")
+            ok = False
+        return ok
+
+    @staticmethod
     def flash(context, port, profile):
         context.logs = []
 
         files = []
         commands = profile.get('commands', [])
         target = profile.get('target', None)
-        if not target:
-            context.logs.append("Error: target not set")
-            return
 
         write_cmds_num = 0
         for cmd in commands:
-            if len(cmd) == 0:
-                context.logs.append("Error: command is empty")
-                return
             if cmd[0] in ("load", "nrf91-update-modem-fw"):
                 write_cmds_num += 1
                 if len(cmd) == 1:
@@ -124,7 +141,7 @@ class PyOCDBackend(Backend):
                 seq.append(file)
 
         pcmd = [
-            *ARGV0, "pyocd", "cmd",
+            *ARGV0, "pyocd_seq",
             port, target, frequency,
             *seq
         ]
