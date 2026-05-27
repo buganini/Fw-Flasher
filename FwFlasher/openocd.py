@@ -29,7 +29,7 @@ def openocd_exec(args):
         openocd[0],
         *args
     ]
-    for line in spawn(cmd):
+    for line in spawn(cmd, print_output=False):
         line = strip(line)
         print(line)
 
