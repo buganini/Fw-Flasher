@@ -12,7 +12,7 @@ Engineers deliver firmware and a manifest.json file for all the complicated sett
         * Experimental external enablement of flash encryption (development mode) + secure boot for esp32c3
     * Black Magic Probe
         * type=bmp
-    * OpenOCD
+    * [OpenOCD](doc/openocd.md)
         * type=openocd
         * Interfaces with device enumeration support:
             * cmsis-dap
@@ -20,7 +20,7 @@ Engineers deliver firmware and a manifest.json file for all the complicated sett
     * dfu-util
         * type=dfu
         * Still needs zadig to fix driver issue on windows
-    * PyOCD
+    * [PyOCD](doc/pyocd.md)
         * type=pyocd
 
 * Batch Flashing
