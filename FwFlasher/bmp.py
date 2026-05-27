@@ -171,7 +171,7 @@ class BMPBackend(Backend):
                     if "total-size" in kv and "total-sent" in kv:
                         context.progress = i * 100 / total + int(int(kv["total-sent"]) / int(kv["total-size"]) * 100) / total
                     context.main.wait()
-                if "Error" in line:
+                if "failed" in line:
                     context.ok = False
                 context.logs.append(line)
         if context.ok:
