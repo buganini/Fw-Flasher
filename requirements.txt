@@ -1,6 +1,6 @@
 esptool==5.1.0
 pyocd==0.44.1
-QPUIQ==0.38
+QPUIQ==0.41
 pyserial==3.5
 PySide6_Essentials
 pyinstaller==6.20.0
