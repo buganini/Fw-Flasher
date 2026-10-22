@@ -194,7 +194,7 @@ class UI(Application):
 
                     if self.backend and self.backend.show_progress:
                         ProgressBar(progress=self.context.progress, maximum=100)
-                    with HBox().layout(weight=1):
+                    with HBox():
                         with Scroll().layout(weight=1).scrollY(Scroll.END):
                             Text("\n".join(self.context.logs), selectable=True)
 
