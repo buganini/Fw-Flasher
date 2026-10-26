@@ -7,6 +7,22 @@ import re
 from .common import *
 
 def find_dfu_util():
+    # Always prefer the bundled executable in a packaged application.
+    if hasattr(sys, "_MEIPASS"):
+        bundled = os.path.join(sys._MEIPASS, "bin", "dfu-util")
+        if sys.platform == "darwin" and os.path.isfile(bundled):
+            return bundled
+
+    # Homebrew supplies native macOS binaries, unlike the legacy x86_64 archive.
+    if sys.platform == "darwin":
+        installed = shutil.which("dfu-util")
+        if installed:
+            return installed
+        for prefix in ("/opt/homebrew", "/usr/local"):
+            installed = os.path.join(prefix, "bin", "dfu-util")
+            if os.path.isfile(installed) and os.access(installed, os.X_OK):
+                return installed
+
     try:
         base_path = sys._MEIPASS
         bin_path = os.path.join(base_path, "bin")

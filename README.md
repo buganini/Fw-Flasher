@@ -40,4 +40,7 @@ Engineers deliver firmware and a manifest.json file for all the complicated sett
 ### Extra Dependencies
 * Download [Arm GNU Toolchain](https://developer.arm.com/downloads/-/gnu-rm) and extract it to the root of the FwFlather so that `arm-none-eabi-gdb` is in the `gcc-arm-none-eabi-X.Y-Z/bin` directory
 * Download [OpenOCD](https://github.com/xpack-dev-tools/openocd-xpack/releases) and extract it to the root of the FwFlasher so that `openocd` is in the `*openocd-X.Y-Z/bin` directory
-* Download [dfu-util](https://dfu-util.sourceforge.net/releases/) and extract it to the root of the FwFlasher so that `dfu-util` is in the `dfu-util-X.Y-binaries/osname/` directory
+* On macOS, install dfu-util with `brew install dfu-util`. The build prefers the executable on PATH, then checks `/opt/homebrew/bin` and `/usr/local/bin`, before falling back to the legacy downloaded archive.
+* On other platforms, download [dfu-util](https://dfu-util.sourceforge.net/releases/) and extract it to the root of the FwFlasher so that `dfu-util` is in the `dfu-util-X.Y-binaries/osname/` directory.
+
+`build-package.py` bundles dfu-util and its non-system shared-library dependencies (including Homebrew's libusb) through PyInstaller. End users do not need Homebrew or a separate dfu-util installation. Build with a dfu-util binary matching the package's CPU architecture; a native Homebrew install normally provides this.
